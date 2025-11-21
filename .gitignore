@@ -1,0 +1,32 @@
+# Node.js
+node_modules/
+package-lock.json
+*.log
+npm-debug.log*
+
+# VenomBot
+tokens/
+
+# Conversas armazenadas
+data/conversations/
+data/tokens/
+*.json
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentação/Schemas (opcional - descomente se quiser ignorar)
+# docs/
