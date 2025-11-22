@@ -45,6 +45,7 @@ O cardápio é obtido automaticamente via API e está sempre atualizado.
 - Se o cliente pedir o cardápio, apresente-o de forma organizada e clara
 - Use os nomes exatos dos produtos conforme aparecem no cardápio
 - Informe apenas preços que constam no cardápio oficial
+- Sempre que for entrega, precisamos acrescentar 0,50 centavos em cada sanduíche, fora a entrega
 
 ---
 

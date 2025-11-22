@@ -8,13 +8,48 @@ const MenuCache = require("./menuCache");
 const API_MENU_URL = process.env.API_MENU_URL || "http://129.153.92.154/api/menu/items";
 const menuCache = new MenuCache();
 
-// Mapeamento de categorias para emojis e nomes formatados
+// Mapeamento de categorias para emojis e nomes formatados (opcional - usado para formatação especial)
 const CATEGORY_CONFIG = {
   Hamburger: { emoji: "🍔", name: "Hambúrgueres" },
   Lombo: { emoji: "🥩", name: "Lombos" },
   Frango: { emoji: "🍗", name: "Sanduíches de Frango" },
-  Vegetariano: { emoji: "🥗", name: "Vegetarianos" }
+  Vegetariano: { emoji: "🥗", name: "Vegetarianos" },
+  Refrigerantes: { emoji: "🥤", name: "Refrigerantes" },
+  Cervejas: { emoji: "🍺", name: "Cervejas" },
+  "Sucos e cremes": { emoji: "🧃", name: "Sucos e Cremes" }
 };
+
+// Ordem preferencial para categorias conhecidas (outras aparecerão depois, em ordem alfabética)
+const ORDEM_CATEGORIAS_PREFERIDA = ["Hamburger", "Lombo", "Frango", "Vegetariano", "Refrigerantes", "Cervejas", "Sucos e cremes"];
+
+// Função para obter emoji baseado no nome da categoria
+function obterEmojiCategoria(categoriaNome) {
+  // Tenta encontrar no mapeamento
+  if (CATEGORY_CONFIG[categoriaNome]) {
+    return CATEGORY_CONFIG[categoriaNome].emoji;
+  }
+
+  // Emojis padrão baseados em palavras-chave
+  const nomeLower = categoriaNome.toLowerCase();
+  if (nomeLower.includes("refrigerante") || nomeLower.includes("bebida")) return "🥤";
+  if (nomeLower.includes("cerveja") || nomeLower.includes("bebida alcoólica")) return "🍺";
+  if (nomeLower.includes("suco") || nomeLower.includes("creme")) return "🧃";
+  if (nomeLower.includes("hamburger") || nomeLower.includes("hambúrguer")) return "🍔";
+  if (nomeLower.includes("lombo")) return "🥩";
+  if (nomeLower.includes("frango")) return "🍗";
+  if (nomeLower.includes("vegetariano")) return "🥗";
+
+  // Emoji padrão genérico
+  return "🔸";
+}
+
+// Função para obter nome formatado da categoria
+function obterNomeFormatadoCategoria(categoriaNome) {
+  if (CATEGORY_CONFIG[categoriaNome]) {
+    return CATEGORY_CONFIG[categoriaNome].name;
+  }
+  return categoriaNome;
+}
 
 function formatarPreco(preco) {
   return preco.toFixed(2).replace(".", ",");
@@ -47,24 +82,46 @@ function agruparPorCategoria(itens) {
 function formatarCardapio(itensPorCategoria) {
   let cardapio = "*PONTO DO LANCHE*\n\n";
 
-  const ordemCategorias = ["Hamburger", "Lombo", "Frango", "Vegetariano"];
+  // Obter todas as categorias dinamicamente
+  const todasCategorias = Object.keys(itensPorCategoria);
+
+  // Separar categorias conhecidas (na ordem preferida) e desconhecidas
+  const categoriasConhecidas = [];
+  const categoriasDesconhecidas = [];
+
+  ORDEM_CATEGORIAS_PREFERIDA.forEach((categoriaNome) => {
+    if (todasCategorias.includes(categoriaNome)) {
+      categoriasConhecidas.push(categoriaNome);
+    }
+  });
+
+  // Adicionar categorias desconhecidas (não estão na ordem preferida)
+  todasCategorias.forEach((categoriaNome) => {
+    if (!ORDEM_CATEGORIAS_PREFERIDA.includes(categoriaNome)) {
+      categoriasDesconhecidas.push(categoriaNome);
+    }
+  });
+
+  // Ordenar categorias desconhecidas alfabeticamente
+  categoriasDesconhecidas.sort();
+
+  // Combinar: primeiro as conhecidas (na ordem preferida), depois as desconhecidas (alfabeticamente)
+  const ordemCategorias = [...categoriasConhecidas, ...categoriasDesconhecidas];
 
   ordemCategorias.forEach((categoriaNome) => {
     if (itensPorCategoria[categoriaNome] && itensPorCategoria[categoriaNome].length > 0) {
-      const config = CATEGORY_CONFIG[categoriaNome] || {
-        emoji: "🔸",
-        name: categoriaNome
-      };
+      const emoji = obterEmojiCategoria(categoriaNome);
+      const nomeFormatado = obterNomeFormatadoCategoria(categoriaNome);
 
       // Formatação bonita para WhatsApp:
       // Títulos em negrito e maiúsculas
-      cardapio += `*${config.emoji} ${config.name.toUpperCase()}*\n`;
+      cardapio += `*${emoji} ${nomeFormatado.toUpperCase()}*\n`;
 
       itensPorCategoria[categoriaNome].forEach((item) => {
-        const nomeFormatado = formatarNomeItem(item.name);
+        const nomeItemFormatado = formatarNomeItem(item.name);
         const precoFormatado = formatarPreco(item.basePrice);
         // Itens com bullet point simples
-        cardapio += `• ${nomeFormatado} — R$ ${precoFormatado}\n`;
+        cardapio += `• ${nomeItemFormatado} — R$ ${precoFormatado}\n`;
       });
 
       cardapio += "\n";

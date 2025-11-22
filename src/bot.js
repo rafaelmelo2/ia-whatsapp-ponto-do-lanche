@@ -27,8 +27,11 @@ const BOT_START_TIME = Math.floor(Date.now() / 1000);
 // Função para inicializar o cardápio ANTES do bot iniciar
 async function inicializarCardapio() {
   try {
-    await getMenu();
+    console.log("🔄 Buscando cardápio atualizado na inicialização...");
+    await atualizarCardapio();
+    console.log("✅ Cardápio inicializado com sucesso!");
   } catch (error) {
+    console.error("⚠️ Falha ao atualizar cardápio na inicialização:", error.message);
     // Silencioso - o cardápio será carregado quando necessário
   }
 }
