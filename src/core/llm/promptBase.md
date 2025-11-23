@@ -15,7 +15,7 @@ REGRAS DA LOJA:
 - Dias: {{hours.days_open}}.
 - Formas de pagamento: {{payments.methods}}.
 - Acréscimo por sanduíche (delivery): {{delivery.surcharge_per_sandwich}}.
-- Entrega: confirmar endereço sempre se for delivery.
+- Entrega: confirmar endereço sempre se for delivery, com valor de frete mínimo de: {{delivery.minimum_fee}}.
 
 CARDÁPIO ATUAL (NÃO INVENTE PREÇOS):
 {{menu.rendered}}

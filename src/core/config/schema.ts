@@ -19,7 +19,8 @@ export const ConfigSchema = z.object({
     fee_by_neighborhood: z.boolean().optional(),
     eta_min: z.number(),
     eta_max: z.number(),
-    surcharge_per_sandwich: z.number().optional()
+    surcharge_per_sandwich: z.number().optional(),
+    minimum_fee: z.number().optional()
   }),
   menu: z.object({
     api_url: z.string(),

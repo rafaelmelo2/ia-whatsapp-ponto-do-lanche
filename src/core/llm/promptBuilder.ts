@@ -27,6 +27,9 @@ export class PromptBuilder {
     const surcharge = config.delivery.surcharge_per_sandwich ? `R$ ${config.delivery.surcharge_per_sandwich.toFixed(2)}` : "Não há";
     prompt = prompt.replace("{{delivery.surcharge_per_sandwich}}", surcharge);
 
+    const minFee = config.delivery.minimum_fee ? `R$ ${config.delivery.minimum_fee.toFixed(2)}` : "A consultar";
+    prompt = prompt.replace("{{delivery.minimum_fee}}", minFee);
+    
     prompt = prompt.replace("{{menu.rendered}}", menuRendered);
 
     // Tone instructions compostas

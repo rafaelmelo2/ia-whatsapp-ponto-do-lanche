@@ -10,7 +10,7 @@
 - [ X ] `npm start` sobe sem crash
 - [ X ] `.env` tem tudo que o app precisa (LLM key, menu api url default, id do cliente, etc)
 - [ X ] Se o `clients/ponto-do-lanche/config.yaml` estiver faltando campo, o app explode cedo com erro claro (zod)
-- [ ] Logs aparecem em `logs/` com data/hora e contexto (não só `console.log`)
+- [ X ] Logs aparecem em `logs/` com data/hora e contexto (não só `console.log`)
 
 > ⚠️ **Se falhar aqui, você nem sai do seu pai.**
 
@@ -20,8 +20,8 @@
 
 **Objetivo:** Conexão estável e leitura correta de mensagens.
 
-- [ ] Autentica uma vez e salva sessão em `tokens/`
-- [ ] Reconecta sozinho após queda de internet/servidor
+- [ X ] Autentica uma vez e salva sessão em `tokens/`
+- [ X ] Reconecta sozinho após queda de internet/servidor
 
 ### Ignora:
 - [ ] Mensagens de grupo
