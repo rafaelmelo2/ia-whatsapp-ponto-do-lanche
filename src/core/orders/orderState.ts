@@ -41,7 +41,7 @@ export class ConversationManager {
 
         // Verifica timeout
         if (Date.now() - state.lastInteraction > TIMEOUT_MS) {
-          logger.info(`Sessão expirada para ${phone}. Iniciando nova conversa.`);
+          logger.info(`Conversa expirada para numero ${phone}`);
           return {
             phone,
             history: [],

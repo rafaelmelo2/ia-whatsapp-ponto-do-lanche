@@ -8,7 +8,7 @@ const OrderExtractionSchema = z.object({
     quantity: z.number(),
     observation: z.string().nullable().optional(),
   })),
-  deliveryNeeded: z.boolean(),
+  deliveryNeeded: z.boolean().nullable().optional(),
   address: z.string().nullable().optional(),
   paymentMethod: z.string().nullable().optional(),
 });
@@ -34,8 +34,11 @@ export class OrderParser {
       if (result.success) {
         // Remove nulls e converte para undefined se precisar, ou mantém
         return {
-            items: result.data.items,
-            deliveryNeeded: result.data.deliveryNeeded,
+            items: result.data.items.map(item => ({
+              ...item,
+              observation: item.observation ?? undefined
+            })),
+            deliveryNeeded: result.data.deliveryNeeded ?? false,
             address: result.data.address || undefined,
             paymentMethod: result.data.paymentMethod || undefined
         };

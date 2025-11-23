@@ -114,8 +114,30 @@ async function main() {
 
           await orderRepo.save(newOrder);
 
-          // Opcional: adicionar texto de confirmação extra se o LLM não mandou
-          // finalMessage += `\n\n(Pedido #${newOrder.id} registrado!)`;
+          // Notificação para o Grupo
+          const groupID = process.env.WHATSAPP_GROUP_ID;
+          if (groupID) {
+            const groupMessage = `🚨 *NOVO PEDIDO DETECTADO* 🚨\n\n👤 Cliente: ${msg.from.split('@')[0]}\n🆔 Pedido: ${newOrder.id}\n📍 Entrega: ${newOrder.deliveryNeeded ? 'Sim' : 'Não'}\n${newOrder.address ? `🏠 Endereço: ${newOrder.address}\n` : ''}💰 Pagamento: ${newOrder.paymentMethod || 'A combinar'}\n\n📋 *Itens:*\n${newOrder.items.map(i => `- ${i.quantity}x ${i.name} ${i.observation ? `(${i.observation})` : ''}`).join('\n')}\n\n💵 *Total Estimado:* R$ ${newOrder.total.toFixed(2)}`;
+            
+            try {
+              await whatsapp.sendText(groupID, groupMessage);
+              logger.info(`Notificação enviada para o grupo ${groupID}`);
+            } catch (error) {
+              logger.error(`Erro ao enviar notificação para o grupo ${groupID}`, error);
+            }
+          } else {
+            logger.warn("WHATSAPP_GROUP_ID não configurado na env, notificação de grupo pulada.");
+          }
+
+          // Se o LLM não gerou texto de confirmação (só JSON), geramos um padrão
+          if (!finalMessage.trim()) {
+             finalMessage = `✅ *Pedido Confirmado!*
+
+Seu pedido #${newOrder.id} foi recebido com sucesso!
+Total estimado: R$ ${newOrder.total.toFixed(2)}
+
+Já estamos preparando tudo. Qualquer dúvida é só chamar!`;
+          }
         }
 
         // G. Envia Resposta
