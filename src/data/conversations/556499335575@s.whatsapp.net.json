@@ -1,0 +1,31 @@
+{
+  "phone": "556499335575@s.whatsapp.net",
+  "history": [
+    {
+      "role": "user",
+      "content": "ola",
+      "timestamp": 1763834777002
+    },
+    {
+      "role": "assistant",
+      "content": "Oi! 😄 Seja bem-vindo(a) à _*Ponto do Lanche*_!  \nEstamos aqui para te ajudar a escolher o lanche perfeito. 🍔🥤  \n\nConfira nosso cardápio:  \n_🍔 HAMBÚRGUERES_  \n_🥩 LOMBOS_  \n_🍗 SANDUÍCHES DE FRANGO_  \n_🥗 VEGETARIANOS_  \n_🥤 REFRIGERANTES_  \n_🍺 CERVEJAS_  \n_🧃 SUCOS E CREMES_  \n\nMe diz o que você gostaria de pedir ou se precisa de alguma ajuda! 😉",
+      "timestamp": 1763834784133
+    },
+    {
+      "role": "user",
+      "content": "deixa eu ver os hamburgueres",
+      "timestamp": 1763834797687
+    },
+    {
+      "role": "assistant",
+      "content": "Claro! Aqui estão os hambúrgueres disponíveis: 🍔  \n\n*🍔 HAMBÚRGUERES*  \n• Americano — R$ 23,00  \n• Bauru Muchulouco — R$ 22,00  \n• Da House — R$ 25,00  \n• Misto Quente — R$ 19,00  \n• X Salada — R$ 23,00  \n• X Salada Especial — R$ 24,00  \n• X-bacon — R$ 25,00  \n• X-bacon Especial — R$ 26,00  \n• X-burguer — R$ 21,00  \n• X-pitikão — R$ 28,00  \n• X-rango — R$ 27,00  \n• X-tudo — R$ 30,00  \n\nQual deles te chamou mais a atenção? 😄",
+      "timestamp": 1763834806849
+    },
+    {
+      "role": "user",
+      "content": "quero um x pitikão e um creme de morango]",
+      "timestamp": 1763834819053
+    }
+  ],
+  "lastInteraction": 1763834819053
+}

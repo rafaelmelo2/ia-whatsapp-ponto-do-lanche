@@ -16,20 +16,17 @@ Refatoração completa para TypeScript com arquitetura Core/Client.
 ## Como Rodar
 
 1. Certifique-se que seu arquivo `.env` tem a chave da OpenAI:
-
    ```env
    OPENAI_API_KEY=sk-...
    CLIENT_ID=ponto-do-lanche
    ```
 
 2. Instale as dependências (já feito):
-
    ```bash
    npm install
    ```
 
 3. Inicie o bot:
-
    ```bash
    npm run dev
    ```
@@ -41,3 +38,4 @@ Refatoração completa para TypeScript com arquitetura Core/Client.
 - Os arquivos antigos estão em `src_legacy/`.
 - Para adicionar novas funcionalidades, mexa em `src/core/`.
 - Para alterar regras de negócio da loja (horários, tom de voz), edite `src/clients/ponto-do-lanche/config.yaml`.
+

@@ -1,0 +1,38 @@
+store:
+  id: "ponto-do-lanche"
+  name: "Ponto do Lanche"
+  phone: "+5511999999999"
+
+hours:
+  open: "19:00"
+  close: "23:30"
+  days_open: ["TER", "QUI", "SEX", "SAB", "DOM"]
+
+payments:
+  methods: ["Pix", "Cartão de Crédito/Débito", "Dinheiro"]
+
+delivery:
+  enabled: true
+  fee_by_neighborhood: true
+  eta_min: 20
+  eta_max: 50
+  surcharge_per_sandwich: 0.50
+
+menu:
+  api_url: "http://129.153.92.154/api/menu/items"
+  currency: "BRL"
+
+upsell:
+  default_suggestions: ["creme de morango", "refrigerante", "molho de alho"]
+  best_sellers_tag: "mais_vendido"
+
+tone:
+  greeting: "Oi! 😄 Seja bem-vindo(a) à *Ponto do Lanche*!"
+  emojis: "moderado"
+  style: "simpático, direto, vendedor"
+
+llm:
+  # Modelo do Chutes.ai (DeepSeek V3)
+  model: "deepseek-ai/DeepSeek-V3"
+  temperature: 0.7
+  max_tokens: 2000

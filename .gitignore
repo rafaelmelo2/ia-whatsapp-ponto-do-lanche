@@ -1,32 +1,10 @@
-# Node.js
 node_modules/
-package-lock.json
+dist/
+.env
+.DS_Store
+_backup_legacy/
+src/data/tokens/
 *.log
 npm-debug.log*
-
-# VenomBot
-tokens/
-
-# Conversas armazenadas
-data/conversations/
-data/tokens/
-*.json
-
-# Variáveis de ambiente
-.env
-.env.local
-.env.*.local
-
-# OS
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Documentação/Schemas (opcional - descomente se quiser ignorar)
-# docs/
+yarn-debug.log*
+yarn-error.log*

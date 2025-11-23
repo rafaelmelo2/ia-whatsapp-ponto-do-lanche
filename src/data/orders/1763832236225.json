@@ -1,0 +1,17 @@
+{
+  "id": "1763832236225",
+  "customerPhone": "556499335575@s.whatsapp.net",
+  "items": [
+    {
+      "name": "X-frango Especial",
+      "quantity": 1,
+      "observation": ""
+    }
+  ],
+  "total": 25,
+  "status": "pending",
+  "deliveryNeeded": true,
+  "address": "Rua José Clementino Borges",
+  "paymentMethod": "Pix",
+  "createdAt": "2025-11-22T17:23:56.225Z"
+}
