@@ -4,6 +4,7 @@ import { logger } from "../utils/logger.js";
 
 export interface LLMResponse {
   content: string;
+  thought?: string;
   usage?: {
     prompt_tokens: number;
     completion_tokens: number;
@@ -48,10 +49,19 @@ export class LLMModel {
         max_tokens: this.config.llm.max_tokens
       });
 
-      const content = completion.choices[0]?.message?.content || "";
+      let content = completion.choices[0]?.message?.content || "";
+      let thought: string | undefined;
+
+      // Extrai o bloco <think>...</think> se existir
+      const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+      if (thinkMatch) {
+        thought = thinkMatch[1].trim();
+        content = content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+      }
 
       return {
         content,
+        thought,
         usage: completion.usage
           ? {
               prompt_tokens: completion.usage.prompt_tokens,

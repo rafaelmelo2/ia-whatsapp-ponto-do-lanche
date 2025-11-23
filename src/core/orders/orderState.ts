@@ -5,6 +5,7 @@ import { logger } from "../utils/logger.js";
 export interface Message {
   role: "user" | "assistant" | "system";
   content: string;
+  thought?: string;
   timestamp: number;
 }
 
@@ -41,7 +42,26 @@ export class ConversationManager {
 
         // Verifica timeout
         if (Date.now() - state.lastInteraction > TIMEOUT_MS) {
-          logger.info(`Conversa expirada para numero ${phone}`);
+          logger.info(`Conversa expirada para numero ${phone}. Arquivando...`);
+
+          // 1. Cria pasta archive se não existir
+          const archiveDir = path.join(this.dataDir, "archive");
+          if (!fs.existsSync(archiveDir)) {
+            await fs.promises.mkdir(archiveDir, { recursive: true });
+          }
+
+          // 2. Move o arquivo atual para o archive com timestamp
+          const archiveFilename = `${phone}_${state.lastInteraction}.json`;
+          const archivePath = path.join(archiveDir, archiveFilename);
+          
+          try {
+            await fs.promises.rename(filePath, archivePath);
+            logger.info(`Conversa arquivada em: ${archivePath}`);
+          } catch (err) {
+            logger.error(`Erro ao arquivar conversa de ${phone}`, err);
+          }
+
+          // 3. Retorna estado zerado (novo arquivo será criado no próximo save)
           return {
             phone,
             history: [],
@@ -78,9 +98,9 @@ export class ConversationManager {
     }
   }
 
-  async addMessage(phone: string, role: "user" | "assistant" | "system", content: string): Promise<ConversationState> {
+  async addMessage(phone: string, role: "user" | "assistant" | "system", content: string, thought?: string): Promise<ConversationState> {
     const state = await this.get(phone);
-    state.history.push({ role, content, timestamp: Date.now() });
+    state.history.push({ role, content, thought, timestamp: Date.now() });
     await this.save(state);
     return state;
   }

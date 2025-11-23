@@ -147,7 +147,7 @@ Já estamos preparando tudo. Qualquer dúvida é só chamar!`;
           
           // sendText já tem delay aleatório embutido
           await whatsapp.sendText(msg.from, finalMessage);
-          await conversationManager.addMessage(msg.from, "assistant", finalMessage);
+          await conversationManager.addMessage(msg.from, "assistant", finalMessage, llmResponse.thought);
         } else {
           await whatsapp.stopTyping(msg.from);
         }
