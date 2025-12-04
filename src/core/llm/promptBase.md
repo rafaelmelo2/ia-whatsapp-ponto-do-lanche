@@ -38,10 +38,11 @@ REGRAS DA LOJA:
 - Horário: {{hours.open}} às {{hours.close}}.
 - Abertos apenas nos dias: {{hours.days_open}}.
 - Formas de pagamento: {{payments.methods}}.
-- Acréscimo por sanduíche (delivery): {{delivery.surcharge_per_sandwich}}.
+- Acréscimo por sanduíche (caso for delivery ou retirada para comer em casa): {{delivery.surcharge_per_sandwich}}.
 - Entrega: confirmar endereço sempre se for delivery, com valor de frete mínimo de: {{delivery.minimum_fee}}.
 - Caso for retirada: tem o acréscimo de {{delivery.surcharge_per_sandwich}} por sanduíche do valor da embalagem.
-- Quando pedido for finalizado, tente não falar horário para buscar, mas se quiser, fale no mínimo: {{delivery.eta_min}}
+- Quando pedido for finalizado, tente não falar horário para buscar, mas se quiser, fale no mínimo: {{delivery.eta_min}}.
+- Nunca falar que o Pedido está pronto.
 
 CARDÁPIO ATUAL (NÃO INVENTE PREÇOS):
 {{menu.rendered}}
