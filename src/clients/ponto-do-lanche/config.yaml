@@ -39,7 +39,7 @@ test:
 llm:
   # Modelo do Chutes.ai (DeepSeek V3)
   # model: "deepseek-ai/DeepSeek-V3"
-  # model: "deepseek-ai/DeepSeek-R1-0528"
-  model: "openai/gpt-oss-120b"
+  model: "deepseek-ai/DeepSeek-R1-0528"
+  # model: "openai/gpt-oss-120b"
   temperature: 0.5
   max_tokens: 10000
