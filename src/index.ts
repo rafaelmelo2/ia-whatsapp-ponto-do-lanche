@@ -117,8 +117,14 @@ async function main() {
           // Notificação para o Grupo
           const groupID = process.env.WHATSAPP_GROUP_ID;
           if (groupID) {
-            const groupMessage = `🚨 *NOVO PEDIDO DETECTADO* 🚨\n\n👤 Cliente: ${msg.from.split('@')[0]}\n🆔 Pedido: ${newOrder.id}\n📍 Entrega: ${newOrder.deliveryNeeded ? 'Sim' : 'Não'}\n${newOrder.address ? `🏠 Endereço: ${newOrder.address}\n` : ''}💰 Pagamento: ${newOrder.paymentMethod || 'A combinar'}\n\n📋 *Itens:*\n${newOrder.items.map(i => `- ${i.quantity}x ${i.name} ${i.observation ? `(${i.observation})` : ''}`).join('\n')}\n\n💵 *Total Estimado:* R$ ${newOrder.total.toFixed(2)}`;
-            
+            const groupMessage = `🚨 *NOVO PEDIDO DETECTADO* 🚨\n\n👤 Cliente: ${msg.from.split("@")[0]}\n🆔 Pedido: ${
+              newOrder.id
+            }\n📍 Entrega: ${newOrder.deliveryNeeded ? "Sim" : "Não"}\n${
+              newOrder.address ? `🏠 Endereço: ${newOrder.address}\n` : ""
+            }💰 Pagamento: ${newOrder.paymentMethod || "A combinar"}\n\n📋 *Itens:*\n${newOrder.items
+              .map((i) => `- ${i.quantity}x ${i.name} ${i.observation ? `(${i.observation})` : ""}`)
+              .join("\n")}\n\n💵 *Total Estimado:* R$ ${newOrder.total.toFixed(2)}`;
+
             try {
               await whatsapp.sendText(groupID, groupMessage);
               logger.info(`Notificação enviada para o grupo ${groupID}`);
@@ -131,7 +137,7 @@ async function main() {
 
           // Se o LLM não gerou texto de confirmação (só JSON), geramos um padrão
           if (!finalMessage.trim()) {
-             finalMessage = `✅ *Pedido Confirmado!*
+            finalMessage = `✅ *Pedido Confirmado!*
 
 Seu pedido #${newOrder.id} foi recebido com sucesso!
 Total estimado: R$ ${newOrder.total.toFixed(2)}
@@ -144,7 +150,7 @@ Já estamos preparando tudo. Qualquer dúvida é só chamar!`;
         if (finalMessage.trim()) {
           // Para de mostrar "digitando..." antes de enviar
           await whatsapp.stopTyping(msg.from);
-          
+
           // sendText já tem delay aleatório embutido
           await whatsapp.sendText(msg.from, finalMessage);
           await conversationManager.addMessage(msg.from, "assistant", finalMessage, llmResponse.thought);

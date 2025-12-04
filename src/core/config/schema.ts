@@ -39,7 +39,13 @@ export const ConfigSchema = z.object({
     model: z.string(),
     temperature: z.number(),
     max_tokens: z.number()
-  })
+  }),
+  test: z
+    .object({
+      enabled: z.boolean(),
+      message: z.string()
+    })
+    .optional()
 });
 
 export type AppConfig = z.infer<typeof ConfigSchema>;

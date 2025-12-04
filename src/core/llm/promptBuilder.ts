@@ -17,6 +17,23 @@ export class PromptBuilder {
   build(config: AppConfig, menuRendered: string): string {
     let prompt = this.template;
 
+    // Teste
+    prompt = prompt.replace("{{isTest}}", config.test?.enabled ? config.test.message : "");
+
+    // Data e hora atual
+    const now = new Date();
+    const dayOfWeek = now.toLocaleDateString("pt-BR", {
+      weekday: "long",
+      timeZone: "America/Sao_Paulo"
+    });
+    const dateTimeFormatted = now.toLocaleString("pt-BR", {
+      dateStyle: "long",
+      timeStyle: "short",
+      timeZone: "America/Sao_Paulo"
+    });
+    prompt = prompt.replace("{{datetime.dayOfWeek}}", dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1));
+    prompt = prompt.replace("{{datetime.now}}", dateTimeFormatted);
+
     // Replacements simples
     prompt = prompt.replace("{{store.name}}", config.store.name);
     prompt = prompt.replace("{{hours.open}}", config.hours.open);
@@ -29,7 +46,7 @@ export class PromptBuilder {
 
     const minFee = config.delivery.minimum_fee ? `R$ ${config.delivery.minimum_fee.toFixed(2)}` : "A consultar";
     prompt = prompt.replace("{{delivery.minimum_fee}}", minFee);
-    
+
     prompt = prompt.replace("{{menu.rendered}}", menuRendered);
 
     // Tone instructions compostas
