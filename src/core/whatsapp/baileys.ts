@@ -15,10 +15,14 @@ import { IncomingMessage, WhatsAppProvider } from "./provider.js";
 export class BaileysProvider implements WhatsAppProvider {
   private sock: any;
   private messageHandler?: (msg: IncomingMessage) => Promise<void>;
+  private groupCommandHandler?: (msg: IncomingMessage) => Promise<void>;
+  private commandGroupId: string | null = null;
   private authPath: string;
+  private clientId: string;
 
-  constructor() {
-    this.authPath = path.resolve(process.cwd(), "src", "data", "tokens");
+  constructor(clientId: string) {
+    this.clientId = clientId;
+    this.authPath = path.resolve(process.cwd(), "src", "data", clientId, "tokens");
     if (!fs.existsSync(this.authPath)) {
       fs.mkdirSync(this.authPath, { recursive: true });
     }
@@ -71,7 +75,7 @@ export class BaileysProvider implements WhatsAppProvider {
       if (qr) {
         console.log("\n");
         qrcode.generate(qr, { small: true });
-        logger.info("Escaneie o QR Code acima para conectar.");
+        logger.info(`[${this.clientId}] Escaneie o QR Code acima para conectar.`);
       }
 
       if (connection === "close") {
@@ -79,16 +83,16 @@ export class BaileysProvider implements WhatsAppProvider {
         const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
         const reason = (lastDisconnect?.error as Boom)?.output?.statusCode;
 
-        logger.warn(`Conexão fechada. Razão: ${reason}. Reconectando: ${shouldReconnect}`);
+        logger.warn(`[${this.clientId}] Conexão fechada. Razão: ${reason}. Reconectando: ${shouldReconnect}`);
 
         if (shouldReconnect) {
           // Pequeno delay para evitar loop infinito frenético
           const delay = reason === 440 ? 10000 : 5000; // Se for 440, espera 10s
-          logger.warn(`Aguardando ${delay}ms para reconectar...`);
+          logger.warn(`[${this.clientId}] Aguardando ${delay}ms para reconectar...`);
           setTimeout(() => this.initialize(), delay);
         }
       } else if (connection === "open") {
-        logger.info("Conexão com WhatsApp estabelecida!");
+        logger.info(`[${this.clientId}] Conexão com WhatsApp estabelecida!`);
       }
     });
 
@@ -102,8 +106,6 @@ export class BaileysProvider implements WhatsAppProvider {
         if (msg.key.fromMe) continue;
 
         const isGroup = msg.key.remoteJid?.endsWith("@g.us") || false;
-        if (isGroup) continue; // Ignora grupos por enquanto
-
         const body = msg.message.conversation || msg.message.extendedTextMessage?.text || msg.message.imageMessage?.caption || "";
 
         if (!body) continue;
@@ -113,14 +115,26 @@ export class BaileysProvider implements WhatsAppProvider {
           body: body,
           pushName: msg.pushName,
           isGroup,
-          messageId: msg.key.id
+          messageId: msg.key.id,
+          participant: msg.key.participant // Número do remetente real (em grupos)
         };
 
-        if (this.messageHandler) {
+        // Se for grupo e for o grupo de comandos, processa comandos
+        if (isGroup && this.commandGroupId && msg.key.remoteJid === this.commandGroupId && this.groupCommandHandler) {
+          try {
+            await this.groupCommandHandler(incoming);
+          } catch (e) {
+            logger.error(`[${this.clientId}] Erro no handler de comando de grupo:`, e);
+          }
+          continue; // Não processa como mensagem normal
+        }
+
+        // Se não for grupo, processa mensagens normais
+        if (!isGroup && this.messageHandler) {
           try {
             await this.messageHandler(incoming);
           } catch (e) {
-            logger.error("Erro no handler de mensagem:", e);
+            logger.error(`[${this.clientId}] Erro no handler de mensagem:`, e);
           }
         }
       }
@@ -129,6 +143,11 @@ export class BaileysProvider implements WhatsAppProvider {
 
   onMessage(handler: (msg: IncomingMessage) => Promise<void>): void {
     this.messageHandler = handler;
+  }
+
+  onGroupCommand(commandGroupId: string | null, handler: (msg: IncomingMessage) => Promise<void>): void {
+    this.commandGroupId = commandGroupId;
+    this.groupCommandHandler = handler;
   }
 
   async sendText(to: string, text: string): Promise<void> {

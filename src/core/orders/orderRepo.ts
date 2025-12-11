@@ -5,10 +5,12 @@ import { Order } from "./orderTypes.js";
 
 export class OrderRepository {
   private dataDir: string;
+  private clientId: string;
 
-  constructor() {
+  constructor(clientId: string) {
+    this.clientId = clientId;
     // Ajuste para rodar tanto em src quanto dist
-    this.dataDir = path.resolve(process.cwd(), "src", "data", "orders");
+    this.dataDir = path.resolve(process.cwd(), "src", "data", clientId, "orders");
     if (!fs.existsSync(this.dataDir)) {
       fs.mkdirSync(this.dataDir, { recursive: true });
     }
@@ -18,9 +20,9 @@ export class OrderRepository {
     const filePath = path.join(this.dataDir, `${order.id}.json`);
     try {
       await fs.promises.writeFile(filePath, JSON.stringify(order, null, 2));
-      logger.info(`Pedido salvo: ${order.id}`);
+      logger.info(`[${this.clientId}] Pedido salvo: ${order.id}`);
     } catch (error) {
-      logger.error(`Erro ao salvar pedido ${order.id}`, error);
+      logger.error(`[${this.clientId}] Erro ao salvar pedido ${order.id}`, error);
       throw error;
     }
   }
@@ -33,7 +35,7 @@ export class OrderRepository {
       const data = await fs.promises.readFile(filePath, "utf8");
       return JSON.parse(data) as Order;
     } catch (error) {
-      logger.error(`Erro ao ler pedido ${id}`, error);
+      logger.error(`[${this.clientId}] Erro ao ler pedido ${id}`, error);
       return null;
     }
   }

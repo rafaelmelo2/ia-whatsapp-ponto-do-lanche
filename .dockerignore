@@ -1,0 +1,17 @@
+node_modules
+dist
+.env
+.env.*
+*.log
+logs
+backups
+src/data
+.git
+.gitignore
+README*.md
+*.md
+tests
+.vscode
+.idea
+.DS_Store
+

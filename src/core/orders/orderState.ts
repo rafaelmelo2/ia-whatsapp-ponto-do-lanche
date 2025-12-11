@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { loadConfig } from "../config/loadConfig.js";
 import { logger } from "../utils/logger.js";
 
 export interface Message {
@@ -19,12 +20,20 @@ export interface ConversationState {
 
 export class ConversationManager {
   private dataDir: string;
+  private clientId: string;
+  private timeoutMs: number;
 
-  constructor() {
-    this.dataDir = path.resolve(process.cwd(), "src", "data", "conversations");
+  constructor(clientId: string) {
+    this.clientId = clientId;
+    this.dataDir = path.resolve(process.cwd(), "src", "data", clientId, "conversations");
     if (!fs.existsSync(this.dataDir)) {
       fs.mkdirSync(this.dataDir, { recursive: true });
     }
+
+    // Carrega o timeout da configuração do cliente
+    const config = loadConfig(clientId);
+    const timeoutMinutes = config.conversation?.timeout_minutes ?? 5;
+    this.timeoutMs = timeoutMinutes * 60 * 1000; // Converte minutos para milissegundos
   }
 
   private getFilePath(phone: string): string {
@@ -33,16 +42,15 @@ export class ConversationManager {
 
   async get(phone: string): Promise<ConversationState> {
     const filePath = this.getFilePath(phone);
-    const TIMEOUT_MS = 1000 * 60 * 5; // 5 minutos de inatividade reinicia a conversa
 
     if (fs.existsSync(filePath)) {
       try {
         const data = await fs.promises.readFile(filePath, "utf8");
         const state: ConversationState = JSON.parse(data);
 
-        // Verifica timeout
-        if (Date.now() - state.lastInteraction > TIMEOUT_MS) {
-          logger.info(`Conversa expirada para numero ${phone}. Arquivando...`);
+        // Verifica timeout (usando o valor configurado para este cliente)
+        if (Date.now() - state.lastInteraction > this.timeoutMs) {
+          logger.info(`[${this.clientId}] Conversa expirada para numero ${phone}. Arquivando...`);
 
           // 1. Cria pasta archive se não existir
           const archiveDir = path.join(this.dataDir, "archive");
@@ -53,12 +61,12 @@ export class ConversationManager {
           // 2. Move o arquivo atual para o archive com timestamp
           const archiveFilename = `${phone}_${state.lastInteraction}.json`;
           const archivePath = path.join(archiveDir, archiveFilename);
-          
+
           try {
             await fs.promises.rename(filePath, archivePath);
-            logger.info(`Conversa arquivada em: ${archivePath}`);
+            logger.info(`[${this.clientId}] Conversa arquivada em: ${archivePath}`);
           } catch (err) {
-            logger.error(`Erro ao arquivar conversa de ${phone}`, err);
+            logger.error(`[${this.clientId}] Erro ao arquivar conversa de ${phone}`, err);
           }
 
           // 3. Retorna estado zerado (novo arquivo será criado no próximo save)
@@ -71,7 +79,7 @@ export class ConversationManager {
 
         return state;
       } catch (e) {
-        logger.error(`Erro ao ler conversa de ${phone}`, e);
+        logger.error(`[${this.clientId}] Erro ao ler conversa de ${phone}`, e);
       }
     }
 
@@ -94,11 +102,16 @@ export class ConversationManager {
     try {
       await fs.promises.writeFile(filePath, JSON.stringify(state, null, 2));
     } catch (e) {
-      logger.error(`Erro ao salvar conversa de ${state.phone}`, e);
+      logger.error(`[${this.clientId}] Erro ao salvar conversa de ${state.phone}`, e);
     }
   }
 
-  async addMessage(phone: string, role: "user" | "assistant" | "system", content: string, thought?: string): Promise<ConversationState> {
+  async addMessage(
+    phone: string,
+    role: "user" | "assistant" | "system",
+    content: string,
+    thought?: string
+  ): Promise<ConversationState> {
     const state = await this.get(phone);
     state.history.push({ role, content, thought, timestamp: Date.now() });
     await this.save(state);

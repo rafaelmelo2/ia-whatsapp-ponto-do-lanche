@@ -3,10 +3,21 @@ dist/
 .env
 .DS_Store
 _backup_legacy/
-src/data/tokens/
-src/data/orders/
-src/data/conversations/*
+
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Ignora todos os arquivos da pasta clients, exceto o config.example.yaml
+!src/clients/client-example/config.example.yaml
+src/clients/*
+
+# Dados por cliente (ignorar conteúdo, manter estrutura)
+src/data/*/tokens/
+src/data/*/orders/
+src/data/*/conversations/*
+src/data/*/menu/*.json
+
+# Backup de dados
+backups/

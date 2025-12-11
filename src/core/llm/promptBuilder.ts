@@ -34,20 +34,52 @@ export class PromptBuilder {
     prompt = prompt.replace("{{datetime.dayOfWeek}}", dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1));
     prompt = prompt.replace("{{datetime.now}}", dateTimeFormatted);
 
-    // Replacements simples
-    prompt = prompt.replace("{{store.name}}", config.store.name);
+    // Replacements simples (usando regex global para substituir todas as ocorrências)
+    prompt = prompt.replace(/{{store\.name}}/g, config.store.name);
+    prompt = prompt.replace(/{{store\.type}}/g, config.store.type);
+    prompt = prompt.replace(/{{store\.catalog_name}}/g, config.catalog.name);
+    prompt = prompt.replace(/{{store\.item_name}}/g, config.catalog.item_name);
+
     prompt = prompt.replace("{{hours.open}}", config.hours.open);
     prompt = prompt.replace("{{hours.close}}", config.hours.close);
     prompt = prompt.replace("{{hours.days_open}}", config.hours.days_open.join(", "));
-    prompt = prompt.replace("{{payments.methods}}", config.payments.methods.join(", "));
+    prompt = prompt.replace(/{{payments\.methods}}/g, config.payments.methods.join(", "));
 
-    const surcharge = config.delivery.surcharge_per_sandwich ? `R$ ${config.delivery.surcharge_per_sandwich.toFixed(2)}` : "Não há";
-    prompt = prompt.replace("{{delivery.surcharge_per_sandwich}}", surcharge);
+    // Construção do Bloco de Regras de Entrega
+    const deliveryRules: string[] = [];
 
-    const minFee = config.delivery.minimum_fee ? `R$ ${config.delivery.minimum_fee.toFixed(2)}` : "A consultar";
-    prompt = prompt.replace("{{delivery.minimum_fee}}", minFee);
+    if (config.delivery.minimum_fee) {
+      deliveryRules.push(
+        `- Entrega: confirmar endereço sempre se for delivery, com valor de frete mínimo de: R$ ${config.delivery.minimum_fee.toFixed(
+          2
+        )}.`
+      );
+    } else {
+      deliveryRules.push(`- Entrega: confirmar endereço sempre se for delivery.`);
+    }
 
-    prompt = prompt.replace("{{menu.rendered}}", menuRendered);
+    if (config.delivery.packaging_fee) {
+      const feeVal = config.delivery.packaging_fee.toFixed(2);
+      const feeLabel = config.delivery.packaging_fee_label || "Taxa de embalagem";
+      deliveryRules.push(
+        `- Acréscimo por ${config.catalog.item_name} (caso for delivery ou retirada): R$ ${feeVal} (${feeLabel}).`
+      );
+      deliveryRules.push(`- Caso for retirada: tem o acréscimo de R$ ${feeVal} por ${config.catalog.item_name} (${feeLabel}).`);
+    }
+
+    deliveryRules.push(
+      `- Quando pedido for finalizado, tente não falar horário para buscar, mas se quiser, fale no mínimo: ${config.delivery.eta_min} a ${config.delivery.eta_max} min.`
+    );
+    deliveryRules.push(`- Nunca falar que o Pedido está pronto imediatamente.`);
+
+    prompt = prompt.replace("{{delivery.rules_block}}", deliveryRules.join("\n"));
+
+    // Construção do Bloco de Regras de Negócio Extras
+    const businessRules = config.llm.business_rules ? config.llm.business_rules.map((r) => `- ${r}`).join("\n") : "";
+    prompt = prompt.replace("{{business.rules_block}}", businessRules);
+
+    // Catálogo renderizado
+    prompt = prompt.replace(/{{catalog\.rendered}}/g, menuRendered);
 
     // Tone instructions compostas
     const tone = `Greeting: ${config.tone.greeting}\nEstilo: ${config.tone.style}\nEmojis: ${config.tone.emojis}`;

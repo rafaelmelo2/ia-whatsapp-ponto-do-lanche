@@ -13,7 +13,33 @@ export function loadConfig(clientId: string): AppConfig {
   }
 
   const fileContents = fs.readFileSync(configPath, "utf8");
-  const rawConfig = yaml.load(fileContents);
+  let rawConfig: any = yaml.load(fileContents);
+
+  // Migração automática: compatibilidade retroativa
+  // Se tiver "menu", migra para "catalog"
+  if (rawConfig.menu && !rawConfig.catalog) {
+    rawConfig.catalog = {
+      ...rawConfig.menu,
+      name: rawConfig.menu.catalog_name || rawConfig.menu.name || "Catálogo",
+      item_name: rawConfig.menu.item_name || "item"
+    };
+    // Se tinha api_url no menu antigo, mantém como api_url
+    if (rawConfig.menu.api_url) {
+      rawConfig.catalog.api_url = rawConfig.menu.api_url;
+    }
+    // Remove catalog_name se existir (já foi movido para name)
+    if (rawConfig.catalog.catalog_name) {
+      delete rawConfig.catalog.catalog_name;
+    }
+    // Remove menu após migração para evitar conflito com schema
+    delete rawConfig.menu;
+  }
+
+  // Se tiver "surcharge_per_sandwich", migra para "packaging_fee"
+  if (rawConfig.delivery?.surcharge_per_sandwich && !rawConfig.delivery?.packaging_fee) {
+    rawConfig.delivery.packaging_fee = rawConfig.delivery.surcharge_per_sandwich;
+    rawConfig.delivery.packaging_fee_label = "Taxa de embalagem";
+  }
 
   const result = ConfigSchema.safeParse(rawConfig);
 

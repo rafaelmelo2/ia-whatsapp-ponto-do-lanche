@@ -21,6 +21,7 @@ Transformar o bot WhatsApp de single-tenant para multi-tenant, permitindo rodar 
 ## 🔄 FASE 0: Preparação e Backup de Dados
 
 ### 📝 Objetivo
+
 Garantir backup dos dados existentes e criar estrutura base para novos clientes.
 
 ### 🛠️ Tarefas
@@ -40,7 +41,7 @@ const BACKUP_DIR = path.resolve(process.cwd(), "backups", `backup-${Date.now()}`
 
 async function backupData() {
   console.log("🔄 Iniciando backup dos dados...");
-  
+
   if (!fs.existsSync(DATA_DIR)) {
     console.log("❌ Pasta de dados não encontrada!");
     return;
@@ -59,11 +60,13 @@ backupData();
 ```
 
 **Como executar**:
+
 ```bash
 npm run backup
 ```
 
 **Adicionar ao `package.json`**:
+
 ```json
 "scripts": {
   "backup": "ts-node scripts/backup-data.ts"
@@ -104,7 +107,7 @@ async function migrateData() {
   const oldConversationsDir = path.join(OLD_DATA_DIR, "conversations");
   if (fs.existsSync(oldConversationsDir)) {
     const files = fs.readdirSync(oldConversationsDir);
-    files.forEach(file => {
+    files.forEach((file) => {
       const oldPath = path.join(oldConversationsDir, file);
       const newPath = path.join(NEW_DATA_DIR, "conversations", file);
       if (fs.statSync(oldPath).isFile()) {
@@ -118,7 +121,7 @@ async function migrateData() {
   const oldOrdersDir = path.join(OLD_DATA_DIR, "orders");
   if (fs.existsSync(oldOrdersDir)) {
     const files = fs.readdirSync(oldOrdersDir);
-    files.forEach(file => {
+    files.forEach((file) => {
       const oldPath = path.join(oldOrdersDir, file);
       const newPath = path.join(NEW_DATA_DIR, "orders", file);
       if (fs.statSync(oldPath).isFile()) {
@@ -132,7 +135,7 @@ async function migrateData() {
   const oldMenuDir = path.join(OLD_DATA_DIR, "menu");
   if (fs.existsSync(oldMenuDir)) {
     const files = fs.readdirSync(oldMenuDir);
-    files.forEach(file => {
+    files.forEach((file) => {
       const oldPath = path.join(oldMenuDir, file);
       const newPath = path.join(NEW_DATA_DIR, "menu", file);
       if (fs.statSync(oldPath).isFile()) {
@@ -146,7 +149,7 @@ async function migrateData() {
   const oldTokensDir = path.join(OLD_DATA_DIR, "tokens");
   if (fs.existsSync(oldTokensDir)) {
     const files = fs.readdirSync(oldTokensDir);
-    files.forEach(file => {
+    files.forEach((file) => {
       const oldPath = path.join(oldTokensDir, file);
       const newPath = path.join(NEW_DATA_DIR, "tokens", file);
       if (fs.statSync(oldPath).isFile()) {
@@ -164,11 +167,13 @@ migrateData();
 ```
 
 **Como executar**:
+
 ```bash
 MIGRATE_CLIENT_ID=ponto-do-lanche npm run migrate
 ```
 
 **Adicionar ao `package.json`**:
+
 ```json
 "scripts": {
   "migrate": "ts-node scripts/migrate-to-multi-client.ts"
@@ -184,6 +189,7 @@ MIGRATE_CLIENT_ID=ponto-do-lanche npm run migrate
 **Alteração**:
 
 **ANTES**:
+
 ```
 src/data/tokens/
 src/data/orders/
@@ -191,6 +197,7 @@ src/data/conversations/*
 ```
 
 **DEPOIS**:
+
 ```
 # Dados por cliente (ignorar conteúdo, manter estrutura)
 src/data/*/tokens/
@@ -209,6 +216,7 @@ backups/
 ## 🔐 FASE 1: Isolamento de Dados nos Repositórios
 
 ### 📝 Objetivo
+
 Modificar todas as classes que persistem dados para incluir `clientId` no caminho, garantindo isolamento completo.
 
 ### 🛠️ Tarefas
@@ -222,6 +230,7 @@ Modificar todas as classes que persistem dados para incluir `clientId` no caminh
 **Linha 20-28** (Constructor):
 
 **ANTES**:
+
 ```typescript
 export class ConversationManager {
   private dataDir: string;
@@ -235,6 +244,7 @@ export class ConversationManager {
 ```
 
 **DEPOIS**:
+
 ```typescript
 export class ConversationManager {
   private dataDir: string;
@@ -252,16 +262,18 @@ export class ConversationManager {
 **Linha 48** (getFilePath no método get - linha 34):
 
 **ANTES**:
+
 ```typescript
 const archiveDir = path.join(this.dataDir, "archive");
 ```
 
 **DEPOIS**:
+
 ```typescript
 const archiveDir = path.join(this.dataDir, "archive");
 ```
 
-*(Nenhuma alteração necessária aqui, pois `this.dataDir` já contém o clientId)*
+_(Nenhuma alteração necessária aqui, pois `this.dataDir` já contém o clientId)_
 
 **✅ Teste**: Verificar que não há mais referências hardcoded a "conversations" fora do constructor.
 
@@ -274,6 +286,7 @@ const archiveDir = path.join(this.dataDir, "archive");
 **Linha 6-15** (Constructor):
 
 **ANTES**:
+
 ```typescript
 export class OrderRepository {
   private dataDir: string;
@@ -288,6 +301,7 @@ export class OrderRepository {
 ```
 
 **DEPOIS**:
+
 ```typescript
 export class OrderRepository {
   private dataDir: string;
@@ -308,11 +322,13 @@ export class OrderRepository {
 **Alterar log para incluir clientId**:
 
 **ANTES**:
+
 ```typescript
 logger.info(`Pedido salvo: ${order.id}`);
 ```
 
 **DEPOIS**:
+
 ```typescript
 logger.info(`[${this.clientId}] Pedido salvo: ${order.id}`);
 ```
@@ -322,11 +338,13 @@ logger.info(`[${this.clientId}] Pedido salvo: ${order.id}`);
 **Alterar log para incluir clientId**:
 
 **ANTES**:
+
 ```typescript
 logger.error(`Erro ao ler pedido ${id}`, error);
 ```
 
 **DEPOIS**:
+
 ```typescript
 logger.error(`[${this.clientId}] Erro ao ler pedido ${id}`, error);
 ```
@@ -340,6 +358,7 @@ logger.error(`[${this.clientId}] Erro ao ler pedido ${id}`, error);
 **Linha 26-32** (Class e Constructor):
 
 **ANTES**:
+
 ```typescript
 export class MenuService {
   private cache: CachedMenu | null = null;
@@ -351,6 +370,7 @@ export class MenuService {
 ```
 
 **DEPOIS**:
+
 ```typescript
 export class MenuService {
   private cache: CachedMenu | null = null;
@@ -368,11 +388,13 @@ export class MenuService {
 **Alterar log para incluir clientId**:
 
 **ANTES**:
+
 ```typescript
 logger.info(`Buscando menu em: ${this.config.menu.api_url}`);
 ```
 
 **DEPOIS**:
+
 ```typescript
 logger.info(`[${this.clientId}] Buscando menu em: ${this.config.menu.api_url}`);
 ```
@@ -382,11 +404,13 @@ logger.info(`[${this.clientId}] Buscando menu em: ${this.config.menu.api_url}`);
 **Alterar log para incluir clientId**:
 
 **ANTES**:
+
 ```typescript
 logger.warn("Menu vazio ou nenhum item ativo encontrado.");
 ```
 
 **DEPOIS**:
+
 ```typescript
 logger.warn(`[${this.clientId}] Menu vazio ou nenhum item ativo encontrado.`);
 ```
@@ -396,11 +420,13 @@ logger.warn(`[${this.clientId}] Menu vazio ou nenhum item ativo encontrado.`);
 **Alterar log para incluir clientId**:
 
 **ANTES**:
+
 ```typescript
 logger.error("Falha ao buscar menu", error);
 ```
 
 **DEPOIS**:
+
 ```typescript
 logger.error(`[${this.clientId}] Falha ao buscar menu`, error);
 ```
@@ -416,6 +442,7 @@ logger.error(`[${this.clientId}] Falha ao buscar menu`, error);
 **Linha 15-25** (Class e Constructor):
 
 **ANTES**:
+
 ```typescript
 export class BaileysProvider implements WhatsAppProvider {
   private sock: any;
@@ -431,6 +458,7 @@ export class BaileysProvider implements WhatsAppProvider {
 ```
 
 **DEPOIS**:
+
 ```typescript
 export class BaileysProvider implements WhatsAppProvider {
   private sock: any;
@@ -452,11 +480,13 @@ export class BaileysProvider implements WhatsAppProvider {
 **Alterar log para incluir clientId**:
 
 **ANTES**:
+
 ```typescript
 logger.info("Escaneie o QR Code acima para conectar.");
 ```
 
 **DEPOIS**:
+
 ```typescript
 logger.info(`[${this.clientId}] Escaneie o QR Code acima para conectar.`);
 ```
@@ -466,11 +496,13 @@ logger.info(`[${this.clientId}] Escaneie o QR Code acima para conectar.`);
 **Alterar log para incluir clientId**:
 
 **ANTES**:
+
 ```typescript
 logger.warn(`Conexão fechada. Razão: ${reason}. Reconectando: ${shouldReconnect}`);
 ```
 
 **DEPOIS**:
+
 ```typescript
 logger.warn(`[${this.clientId}] Conexão fechada. Razão: ${reason}. Reconectando: ${shouldReconnect}`);
 ```
@@ -480,11 +512,13 @@ logger.warn(`[${this.clientId}] Conexão fechada. Razão: ${reason}. Reconectand
 **Alterar log para incluir clientId**:
 
 **ANTES**:
+
 ```typescript
 logger.warn(`Aguardando ${delay}ms para reconectar...`);
 ```
 
 **DEPOIS**:
+
 ```typescript
 logger.warn(`[${this.clientId}] Aguardando ${delay}ms para reconectar...`);
 ```
@@ -494,11 +528,13 @@ logger.warn(`[${this.clientId}] Aguardando ${delay}ms para reconectar...`);
 **Alterar log para incluir clientId**:
 
 **ANTES**:
+
 ```typescript
 logger.info("Conexão com WhatsApp estabelecida!");
 ```
 
 **DEPOIS**:
+
 ```typescript
 logger.info(`[${this.clientId}] Conexão com WhatsApp estabelecida!`);
 ```
@@ -508,11 +544,13 @@ logger.info(`[${this.clientId}] Conexão com WhatsApp estabelecida!`);
 **Alterar log para incluir clientId**:
 
 **ANTES**:
+
 ```typescript
 logger.error("Erro no handler de mensagem:", e);
 ```
 
 **DEPOIS**:
+
 ```typescript
 logger.error(`[${this.clientId}] Erro no handler de mensagem:`, e);
 ```
@@ -522,6 +560,7 @@ logger.error(`[${this.clientId}] Erro no handler de mensagem:`, e);
 ## 📝 FASE 2: Logs Contextualizados por Cliente
 
 ### 📝 Objetivo
+
 Melhorar o sistema de logs para incluir `clientId` em todas as mensagens, facilitando debugging e monitoramento em produção.
 
 ### 🛠️ Tarefas
@@ -535,6 +574,7 @@ Melhorar o sistema de logs para incluir `clientId` em todas as mensagens, facili
 **Substituir TODO o arquivo**:
 
 **ANTES**:
+
 ```typescript
 import winston from "winston";
 import fs from "fs";
@@ -555,14 +595,12 @@ export const logger = winston.createLogger({
       return `[${timestamp}] ${level.toUpperCase()}: ${message}`;
     })
   ),
-  transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: "logs/app.log" })
-  ]
+  transports: [new winston.transports.Console(), new winston.transports.File({ filename: "logs/app.log" })]
 });
 ```
 
 **DEPOIS**:
+
 ```typescript
 import winston from "winston";
 import fs from "fs";
@@ -605,7 +643,7 @@ export const logger = winston.createLogger({
 // Factory para criar logger específico de cliente
 export function createClientLogger(clientId: string): winston.Logger {
   const logFile = path.join(logDir, `${clientId}.log`);
-  
+
   return winston.createLogger({
     level: process.env.LOG_LEVEL || "info",
     format: winston.format.combine(
@@ -640,6 +678,7 @@ export function createClientLogger(clientId: string): winston.Logger {
 ## 🔄 FASE 3: Refatoração do Entry Point (`index.ts`)
 
 ### 📝 Objetivo
+
 Modificar o ponto de entrada para suportar múltiplos clientes, passando `clientId` para todas as classes que precisam.
 
 ### 🛠️ Tarefas
@@ -653,12 +692,14 @@ Modificar o ponto de entrada para suportar múltiplos clientes, passando `client
 **Linha 15-16** (Definição de CLIENT_ID):
 
 **ANTES**:
+
 ```typescript
 // ID do cliente (poderia vir de env var)
 const CLIENT_ID = process.env.CLIENT_ID || "ponto-do-lanche";
 ```
 
 **DEPOIS**:
+
 ```typescript
 // ID do cliente (obrigatório via env var)
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -673,6 +714,7 @@ if (!CLIENT_ID) {
 **Refatorar TODO o conteúdo da função**:
 
 **ANTES**:
+
 ```typescript
 async function main() {
   try {
@@ -694,12 +736,13 @@ async function main() {
 ```
 
 **DEPOIS**:
+
 ```typescript
 async function main() {
   try {
     const port = Number(process.env.PORT) || 3000;
     startServer(port);
-    
+
     // Criar logger específico do cliente
     const clientLogger = createClientLogger(CLIENT_ID);
     clientLogger.info(`Iniciando bot para cliente: ${CLIENT_ID}`);
@@ -723,12 +766,14 @@ async function main() {
 **Alterar para usar clientLogger**:
 
 **ANTES**:
+
 ```typescript
     whatsapp.onMessage(async (msg) => {
       logger.info(`Msg de ${msg.from}: ${msg.body}`);
 ```
 
 **DEPOIS**:
+
 ```typescript
     whatsapp.onMessage(async (msg) => {
       clientLogger.info(`Msg de ${msg.from}: ${msg.body}`);
@@ -739,13 +784,15 @@ async function main() {
 **Alterar para usar clientLogger**:
 
 **ANTES**:
+
 ```typescript
-        logger.info(`Gerando resposta LLM...`);
+logger.info(`Gerando resposta LLM...`);
 ```
 
 **DEPOIS**:
+
 ```typescript
-        clientLogger.info(`Gerando resposta LLM...`);
+clientLogger.info(`Gerando resposta LLM...`);
 ```
 
 **Linha 66** (Validação guard):
@@ -753,13 +800,15 @@ async function main() {
 **Alterar para usar clientLogger**:
 
 **ANTES**:
+
 ```typescript
-          logger.warn(`Resposta inválida do LLM: ${validation.reason}`);
+logger.warn(`Resposta inválida do LLM: ${validation.reason}`);
 ```
 
 **DEPOIS**:
+
 ```typescript
-          clientLogger.warn(`Resposta inválida do LLM: ${validation.reason}`);
+clientLogger.warn(`Resposta inválida do LLM: ${validation.reason}`);
 ```
 
 **Linha 79** (Pedido detectado):
@@ -767,13 +816,15 @@ async function main() {
 **Alterar para usar clientLogger**:
 
 **ANTES**:
+
 ```typescript
-          logger.info("Pedido detectado!", orderExtraction);
+logger.info("Pedido detectado!", orderExtraction);
 ```
 
 **DEPOIS**:
+
 ```typescript
-          clientLogger.info("Pedido detectado!", orderExtraction);
+clientLogger.info("Pedido detectado!", orderExtraction);
 ```
 
 **Linha 95** (Item não encontrado):
@@ -781,13 +832,15 @@ async function main() {
 **Alterar para usar clientLogger**:
 
 **ANTES**:
+
 ```typescript
-              logger.warn(`Item não encontrado no menu ao fechar pedido: ${item.name}`);
+logger.warn(`Item não encontrado no menu ao fechar pedido: ${item.name}`);
 ```
 
 **DEPOIS**:
+
 ```typescript
-              clientLogger.warn(`Item não encontrado no menu ao fechar pedido: ${item.name}`);
+clientLogger.warn(`Item não encontrado no menu ao fechar pedido: ${item.name}`);
 ```
 
 **Linha 130** (Notificação enviada):
@@ -795,13 +848,15 @@ async function main() {
 **Alterar para usar clientLogger**:
 
 **ANTES**:
+
 ```typescript
-              logger.info(`Notificação enviada para o grupo ${groupID}`);
+logger.info(`Notificação enviada para o grupo ${groupID}`);
 ```
 
 **DEPOIS**:
+
 ```typescript
-              clientLogger.info(`Notificação enviada para o grupo ${groupID}`);
+clientLogger.info(`Notificação enviada para o grupo ${groupID}`);
 ```
 
 **Linha 132** (Erro ao enviar notificação):
@@ -809,13 +864,15 @@ async function main() {
 **Alterar para usar clientLogger**:
 
 **ANTES**:
+
 ```typescript
-              logger.error(`Erro ao enviar notificação para o grupo ${groupID}`, error);
+logger.error(`Erro ao enviar notificação para o grupo ${groupID}`, error);
 ```
 
 **DEPOIS**:
+
 ```typescript
-              clientLogger.error(`Erro ao enviar notificação para o grupo ${groupID}`, error);
+clientLogger.error(`Erro ao enviar notificação para o grupo ${groupID}`, error);
 ```
 
 **Linha 135** (Grupo não configurado):
@@ -823,13 +880,15 @@ async function main() {
 **Alterar para usar clientLogger**:
 
 **ANTES**:
+
 ```typescript
-            logger.warn("WHATSAPP_GROUP_ID não configurado na env, notificação de grupo pulada.");
+logger.warn("WHATSAPP_GROUP_ID não configurado na env, notificação de grupo pulada.");
 ```
 
 **DEPOIS**:
+
 ```typescript
-            clientLogger.warn("WHATSAPP_GROUP_ID não configurado na env, notificação de grupo pulada.");
+clientLogger.warn("WHATSAPP_GROUP_ID não configurado na env, notificação de grupo pulada.");
 ```
 
 **Linha 161** (Erro no processamento):
@@ -837,13 +896,15 @@ async function main() {
 **Alterar para usar clientLogger**:
 
 **ANTES**:
+
 ```typescript
-        logger.error("Erro no processamento da mensagem", err);
+logger.error("Erro no processamento da mensagem", err);
 ```
 
 **DEPOIS**:
+
 ```typescript
-        clientLogger.error("Erro no processamento da mensagem", err);
+clientLogger.error("Erro no processamento da mensagem", err);
 ```
 
 **Linha 174** (Erro fatal):
@@ -851,14 +912,16 @@ async function main() {
 **Alterar para usar clientLogger**:
 
 **ANTES**:
+
 ```typescript
-    logger.error("Fatal error no startup:", e);
+logger.error("Fatal error no startup:", e);
 ```
 
 **DEPOIS**:
+
 ```typescript
-    console.error("Fatal error no startup:", e);
-    process.exit(1);
+console.error("Fatal error no startup:", e);
+process.exit(1);
 ```
 
 **Linha 2** (Import do logger):
@@ -866,11 +929,13 @@ async function main() {
 **Adicionar import do createClientLogger**:
 
 **ANTES**:
+
 ```typescript
 import { logger } from "./core/utils/logger.js";
 ```
 
 **DEPOIS**:
+
 ```typescript
 import { logger, createClientLogger } from "./core/utils/logger.js";
 ```
@@ -882,6 +947,7 @@ import { logger, createClientLogger } from "./core/utils/logger.js";
 ## 🐳 FASE 4: Docker e Containerização
 
 ### 📝 Objetivo
+
 Criar infraestrutura Docker para facilitar deploy e permitir rodar múltiplas instâncias (uma por cliente).
 
 ### 🛠️ Tarefas
@@ -978,7 +1044,7 @@ tests
 **Ação**: Criar novo arquivo
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   # Cliente: Ponto do Lanche
@@ -989,7 +1055,7 @@ services:
     container_name: ia-whatsapp-ponto-do-lanche
     environment:
       - CLIENT_ID=ponto-do-lanche
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - CHUTES_AI_API_KEY=${CHUTES_AI_API_KEY}
       - PORT=3000
       - LOG_LEVEL=info
       - WHATSAPP_GROUP_ID=${WHATSAPP_GROUP_ID:-}
@@ -1040,7 +1106,7 @@ networks:
 **Ação**: Criar novo arquivo
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   ponto-do-lanche:
@@ -1050,7 +1116,7 @@ services:
     container_name: ia-whatsapp-ponto-do-lanche-prod
     environment:
       - CLIENT_ID=ponto-do-lanche
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - CHUTES_AI_API_KEY=${CHUTES_AI_API_KEY}
       - PORT=3000
       - NODE_ENV=production
       - LOG_LEVEL=info
@@ -1084,6 +1150,7 @@ networks:
 **Localização**: Seção `scripts` (após os scripts existentes)
 
 **Adição**:
+
 ```json
 "scripts": {
   "docker:build": "docker-compose build",
@@ -1105,6 +1172,7 @@ networks:
 **Linha 8-10** (Endpoint /health):
 
 **ANTES**:
+
 ```typescript
 app.get("/health", (req, res) => {
   res.send({ status: "ok", uptime: process.uptime() });
@@ -1112,9 +1180,10 @@ app.get("/health", (req, res) => {
 ```
 
 **DEPOIS**:
+
 ```typescript
 app.get("/health", (req, res) => {
-  res.status(200).json({ 
+  res.status(200).json({
     status: "healthy",
     clientId: (global as any).CLIENT_ID || "unknown",
     uptime: process.uptime(),
@@ -1126,6 +1195,7 @@ app.get("/health", (req, res) => {
 **Linha 23** (Função startServer):
 
 **ANTES**:
+
 ```typescript
 export function startServer(port: number = 3000) {
   const server = app.listen(port, () => {
@@ -1134,13 +1204,14 @@ export function startServer(port: number = 3000) {
 ```
 
 **DEPOIS**:
+
 ```typescript
 export function startServer(port: number = 3000, clientId?: string) {
   // Armazena clientId globalmente para o endpoint /health
   if (clientId) {
     (global as any).CLIENT_ID = clientId;
   }
-  
+
   const server = app.listen(port, () => {
     logger.info(`HTTP Server rodando na porta ${port}${clientId ? ` (cliente: ${clientId})` : ""}`);
   });
@@ -1149,13 +1220,15 @@ export function startServer(port: number = 3000, clientId?: string) {
 **Atualizar `src/index.ts` linha 20**:
 
 **ANTES**:
+
 ```typescript
-    startServer(port);
+startServer(port);
 ```
 
 **DEPOIS**:
+
 ```typescript
-    startServer(port, CLIENT_ID);
+startServer(port, CLIENT_ID);
 ```
 
 ---
@@ -1163,6 +1236,7 @@ export function startServer(port: number = 3000, clientId?: string) {
 ## ✅ FASE 5: Testes e Validação
 
 ### 📝 Objetivo
+
 Garantir que todas as mudanças funcionam corretamente e que há isolamento completo entre clientes.
 
 ### 🛠️ Tarefas
@@ -1195,7 +1269,7 @@ describe("Isolamento Multi-Cliente", () => {
     // Limpa dados de teste
     const dataDir1 = path.resolve(process.cwd(), "src", "data", CLIENT_1);
     const dataDir2 = path.resolve(process.cwd(), "src", "data", CLIENT_2);
-    
+
     if (fs.existsSync(dataDir1)) {
       fs.rmSync(dataDir1, { recursive: true, force: true });
     }
@@ -1246,7 +1320,7 @@ describe("Isolamento Multi-Cliente", () => {
 
     // Adiciona mensagem no cliente 1
     await manager1.addMessage("5511999999999@s.whatsapp.net", "user", "Mensagem cliente 1");
-    
+
     // Adiciona mensagem no cliente 2
     await manager2.addMessage("5511999999999@s.whatsapp.net", "user", "Mensagem cliente 2");
 
@@ -1263,6 +1337,7 @@ describe("Isolamento Multi-Cliente", () => {
 ```
 
 **Adicionar ao `package.json`**:
+
 ```json
 "scripts": {
   "test:isolation": "ts-node tests/isolation.test.ts"
@@ -1270,6 +1345,7 @@ describe("Isolamento Multi-Cliente", () => {
 ```
 
 **⚠️ Nota**: Você precisará instalar dependências de teste se ainda não tiver:
+
 ```bash
 npm install --save-dev jest @types/jest ts-jest
 ```
@@ -1284,22 +1360,26 @@ npm install --save-dev jest @types/jest ts-jest
 # Checklist de Testes Manuais - Multi-Cliente
 
 ## Pré-requisitos
+
 - [ ] Dados migrados (se aplicável)
 - [ ] Build compilado: `npm run build`
 - [ ] Variável `CLIENT_ID` definida no `.env`
 
 ## Teste 1: Inicialização
+
 - [ ] Bot inicia sem erros com `CLIENT_ID=ponto-do-lanche`
 - [ ] Logs mostram `[ponto-do-lanche]` em todas as mensagens
 - [ ] Estrutura de pastas `src/data/ponto-do-lanche/` criada
 
 ## Teste 2: Funcionalidade Básica
+
 - [ ] Recebe mensagem no WhatsApp
 - [ ] Responde corretamente
 - [ ] Salva conversa em `src/data/ponto-do-lanche/conversations/`
 - [ ] Logs aparecem em `logs/ponto-do-lanche.log`
 
 ## Teste 3: Isolamento (2 clientes)
+
 - [ ] Criar segundo cliente (ex: `cliente-teste`)
 - [ ] Configurar `.env` com `CLIENT_ID=cliente-teste`
 - [ ] Iniciar segunda instância (porta diferente)
@@ -1310,6 +1390,7 @@ npm install --save-dev jest @types/jest ts-jest
   - [ ] Logs separados em arquivos diferentes
 
 ## Teste 4: Docker
+
 - [ ] `docker-compose build` executa sem erros
 - [ ] `docker-compose up` inicia containers
 - [ ] Health check responde: `curl http://localhost:3000/health`
@@ -1321,6 +1402,7 @@ npm install --save-dev jest @types/jest ts-jest
 ## 📚 FASE 6: Documentação e Deploy
 
 ### 📝 Objetivo
+
 Atualizar documentação e criar guias para adicionar novos clientes.
 
 ### 🛠️ Tarefas
@@ -1331,18 +1413,21 @@ Atualizar documentação e criar guias para adicionar novos clientes.
 
 **Ação**: Criar novo arquivo
 
-```markdown
+````markdown
 # 📝 Guia: Adicionar Novo Cliente
 
 ## Passo a Passo
 
 ### 1. Criar Estrutura de Pastas
+
 ```bash
 mkdir -p src/clients/meu-novo-cliente
 mkdir -p src/data/meu-novo-cliente/{conversations,orders,menu,tokens}
 ```
+````
 
 ### 2. Criar Configuração
+
 Copie o template de `src/clients/ponto-do-lanche/config.yaml` e ajuste:
 
 ```bash
@@ -1376,6 +1461,7 @@ meu-novo-cliente:
 ```
 
 ### 4. Testar Localmente
+
 ```bash
 # Sem Docker
 CLIENT_ID=meu-novo-cliente npm run dev
@@ -1385,8 +1471,10 @@ docker-compose up meu-novo-cliente
 ```
 
 ### 5. Deploy em Produção
+
 Ajuste `docker-compose.prod.yml` similarmente.
-```
+
+````
 
 #### 6.2. Atualizar `README.md`
 
@@ -1407,14 +1495,16 @@ O bot suporta múltiplos clientes. Cada cliente possui:
 ### Rodar Localmente
 ```bash
 CLIENT_ID=ponto-do-lanche npm run dev
-```
+````
 
 ### Rodar com Docker
+
 ```bash
 docker-compose up ponto-do-lanche
 ```
 
 Veja [GUIA_ADICIONAR_CLIENTE.md](./GUIA_ADICIONAR_CLIENTE.md) para adicionar novos clientes.
+
 ```
 
 ---
@@ -1487,6 +1577,7 @@ Use este checklist para acompanhar o progresso:
 
 ---
 
-**Última atualização**: 2025-01-27  
+**Última atualização**: 2025-01-27
 **Versão do Plano**: 1.0
 
+```

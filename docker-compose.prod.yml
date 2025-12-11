@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  ponto-do-lanche:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ponto-do-lanche-prod
+    environment:
+      # CLIENT_ID será detectado automaticamente do container_name (remove -prod)
+      # Mas pode ser sobrescrito se necessário
+      - CLIENT_ID=${CLIENT_ID:-ponto-do-lanche}
+      - CHUTES_AI_API_KEY=${CHUTES_AI_API_KEY}
+      - PORT=3000
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - PONTO_DO_LANCHE_NOTIFICATION_GROUP_ID=${PONTO_DO_LANCHE_NOTIFICATION_GROUP_ID:-}
+      - PONTO_DO_LANCHE_COMMAND_GROUP_ID=${PONTO_DO_LANCHE_COMMAND_GROUP_ID:-}
+      - PONTO_DO_LANCHE_ADMIN_PHONES=${PONTO_DO_LANCHE_ADMIN_PHONES:-}
+    volumes:
+      - ponto-do-lanche-data:/app/src/data/ponto-do-lanche
+      - ./src/clients/ponto-do-lanche:/app/src/clients/ponto-do-lanche:ro
+      - ponto-do-lanche-logs:/app/logs
+    restart: always
+    networks:
+      - whatsapp-bot-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  ponto-do-lanche-data:
+  ponto-do-lanche-logs:
+
+networks:
+  whatsapp-bot-network:
+    driver: bridge
+

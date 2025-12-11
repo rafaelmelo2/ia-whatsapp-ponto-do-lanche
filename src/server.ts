@@ -1,17 +1,16 @@
 import express from "express";
-import { MOCK_MENU_ITEMS } from "./core/menu/menu_data.js";
 import { logger } from "./core/utils/logger.js";
 
 const app = express();
 app.use(express.json());
 
 app.get("/health", (req, res) => {
-  res.send({ status: "ok", uptime: process.uptime() });
-});
-
-// Servindo o cardápio Mock
-app.get("/menu", (req, res) => {
-  res.json(MOCK_MENU_ITEMS);
+  res.status(200).json({
+    status: "healthy",
+    clientId: (global as any).CLIENT_ID || "unknown",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Webhook placeholder (se mudar para Twilio/WppConnect)
@@ -20,9 +19,14 @@ app.post("/webhook", (req, res) => {
   res.sendStatus(200);
 });
 
-export function startServer(port: number = 3000) {
+export function startServer(port: number = 3000, clientId?: string) {
+  // Armazena clientId globalmente para o endpoint /health
+  if (clientId) {
+    (global as any).CLIENT_ID = clientId;
+  }
+
   const server = app.listen(port, () => {
-    logger.info(`HTTP Server rodando na porta ${port}`);
+    logger.info(`HTTP Server rodando na porta ${port}${clientId ? ` (cliente: ${clientId})` : ""}`);
   });
 
   server.on("error", (err: any) => {

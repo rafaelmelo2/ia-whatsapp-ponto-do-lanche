@@ -20,8 +20,11 @@ export class LLMModel {
     this.config = config;
 
     // Configuração para Chutes.ai
-    // Se a chave CHUTES_AI_API_KEY existir, usa ela. Senão tenta OPENAI_API_KEY (para compatibilidade)
-    const apiKey = process.env.CHUTES_AI_API_KEY || process.env.OPENAI_API_KEY;
+    const apiKey = process.env.CHUTES_AI_API_KEY;
+
+    if (!apiKey) {
+      throw new Error("CHUTES_AI_API_KEY não definida na variável de ambiente!");
+    }
     const baseURL = "https://llm.chutes.ai/v1";
 
     logger.info(`Inicializando LLM via Chutes.ai (${baseURL}) com modelo ${this.config.llm.model}`);

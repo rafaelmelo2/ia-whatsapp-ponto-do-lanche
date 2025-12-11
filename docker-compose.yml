@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Cliente: Ponto do Lanche
+  ponto-do-lanche:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ponto-do-lanche
+    environment:
+      # CLIENT_ID será detectado automaticamente do container_name
+      # Mas pode ser sobrescrito se necessário
+      - CLIENT_ID=${CLIENT_ID:-ponto-do-lanche}
+      - CHUTES_AI_API_KEY=${CHUTES_AI_API_KEY}
+      - PORT=3000
+      - LOG_LEVEL=info
+      - PONTO_DO_LANCHE_NOTIFICATION_GROUP_ID=${PONTO_DO_LANCHE_NOTIFICATION_GROUP_ID:-}
+      - PONTO_DO_LANCHE_COMMAND_GROUP_ID=${PONTO_DO_LANCHE_COMMAND_GROUP_ID:-}
+      - PONTO_DO_LANCHE_ADMIN_PHONES=${PONTO_DO_LANCHE_ADMIN_PHONES:-}
+    volumes:
+      # Monta dados persistentes
+      - ./src/data/ponto-do-lanche:/app/src/data/ponto-do-lanche
+      # Monta configuração do cliente (pode editar sem rebuild)
+      - ./src/clients/ponto-do-lanche:/app/src/clients/ponto-do-lanche:ro
+      # Monta logs
+      - ./logs:/app/logs
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - whatsapp-bot-network
+
+  # Cliente: Exemplo (descomente e ajuste quando adicionar novo cliente)
+  # cliente-2:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: cliente-2
+  #   environment:
+  #     # CLIENT_ID será detectado automaticamente do container_name
+  #     - CLIENT_ID=${CLIENT_ID:-cliente-2}
+  #     - CHUTES_AI_API_KEY=${CHUTES_AI_API_KEY}
+  #     - PORT=3001
+  #     - LOG_LEVEL=info
+  #     - PONTO_DO_LANCHE_NOTIFICATION_GROUP_ID=${PONTO_DO_LANCHE_NOTIFICATION_GROUP_ID_CLIENTE_2:-}
+  #   volumes:
+  #     - ./src/data/cliente-2:/app/src/data/cliente-2
+  #     - ./src/clients/cliente-2:/app/src/clients/cliente-2:ro
+  #     - ./logs:/app/logs
+  #   ports:
+  #     - "3001:3000"
+  #   restart: unless-stopped
+  #   networks:
+  #     - whatsapp-bot-network
+
+networks:
+  whatsapp-bot-network:
+    driver: bridge
+

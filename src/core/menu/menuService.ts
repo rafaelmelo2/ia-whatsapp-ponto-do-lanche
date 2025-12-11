@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { AppConfig } from "../config/schema.js";
 import { logger } from "../utils/logger.js";
 import { MenuItem } from "./menuTypes.js";
@@ -10,39 +12,22 @@ interface CachedMenu {
 
 const CACHE_TTL = 1000 * 60 * 30; // 30 minutos
 
-// Configuração de categorias (hardcoded por enquanto, mas poderia vir de config externa)
-const CATEGORY_CONFIG: Record<string, { emoji: string; name: string }> = {
-  Hamburger: { emoji: "🍔", name: "Hambúrgueres" },
-  Lombo: { emoji: "🥩", name: "Lombos" },
-  Frango: { emoji: "🍗", name: "Sanduíches de Frango" },
-  Vegetariano: { emoji: "🥗", name: "Vegetarianos" },
-  Refrigerantes: { emoji: "🥤", name: "Refrigerantes" },
-  Cervejas: { emoji: "🍺", name: "Cervejas" },
-  "Sucos e cremes": { emoji: "🧃", name: "Sucos e Cremes" }
-};
-
-const ORDEM_CATEGORIAS_PREFERIDA = ["Hamburger", "Lombo", "Frango", "Vegetariano", "Refrigerantes", "Cervejas", "Sucos e cremes"];
-
 export class MenuService {
   private cache: CachedMenu | null = null;
   private config: AppConfig;
+  private clientId: string;
 
-  constructor(config: AppConfig) {
+  constructor(config: AppConfig, clientId: string) {
     this.config = config;
+    this.clientId = clientId;
   }
 
   private getEmojiCategoria(categoriaNome: string): string {
-    if (CATEGORY_CONFIG[categoriaNome]) {
-      return CATEGORY_CONFIG[categoriaNome].emoji;
+    // Usa emoji da configuração se disponível
+    if (this.config.catalog.categories && this.config.catalog.categories[categoriaNome]) {
+      return this.config.catalog.categories[categoriaNome].emoji;
     }
-    const nomeLower = categoriaNome.toLowerCase();
-    if (nomeLower.includes("refrigerante") || nomeLower.includes("bebida")) return "🥤";
-    if (nomeLower.includes("cerveja") || nomeLower.includes("bebida alcoólica")) return "🍺";
-    if (nomeLower.includes("suco") || nomeLower.includes("creme")) return "🧃";
-    if (nomeLower.includes("hamburger") || nomeLower.includes("hambúrguer")) return "🍔";
-    if (nomeLower.includes("lombo")) return "🥩";
-    if (nomeLower.includes("frango")) return "🍗";
-    if (nomeLower.includes("vegetariano")) return "🥗";
+    // Fallback genérico se não configurado
     return "🔸";
   }
 
@@ -69,32 +54,158 @@ export class MenuService {
       agrupados[categoriaNome].push(item);
     });
 
-    let cardapio = `*${this.config.store.name.toUpperCase()}*\n\n`;
+    let catalogText = `*${this.config.store.name.toUpperCase()}*\n\n`;
     const todasCategorias = Object.keys(agrupados);
 
-    const categoriasConhecidas = ORDEM_CATEGORIAS_PREFERIDA.filter((c) => todasCategorias.includes(c));
-    const categoriasDesconhecidas = todasCategorias.filter((c) => !ORDEM_CATEGORIAS_PREFERIDA.includes(c)).sort();
+    // Usa ordem configurada ou ordem alfabética como fallback
+    const ordemCategoriasConfig = this.config.catalog.category_order || [];
+    const categoriasConhecidas = ordemCategoriasConfig.filter((c) => todasCategorias.includes(c));
+    const categoriasDesconhecidas = todasCategorias.filter((c) => !ordemCategoriasConfig.includes(c)).sort();
 
     const ordemCategorias = [...categoriasConhecidas, ...categoriasDesconhecidas];
 
     ordemCategorias.forEach((categoriaNome) => {
       if (agrupados[categoriaNome] && agrupados[categoriaNome].length > 0) {
         const emoji = this.getEmojiCategoria(categoriaNome);
-        const nomeFormatado = CATEGORY_CONFIG[categoriaNome]?.name || categoriaNome;
 
-        cardapio += `*${emoji} ${nomeFormatado.toUpperCase()}*\n`;
+        // Usa nome formatado da config ou o nome original da categoria
+        let nomeFormatado = categoriaNome;
+        if (this.config.catalog.categories && this.config.catalog.categories[categoriaNome]) {
+          nomeFormatado = this.config.catalog.categories[categoriaNome].name;
+        }
+
+        catalogText += `*${emoji} ${nomeFormatado.toUpperCase()}*\n`;
 
         agrupados[categoriaNome].forEach((item) => {
           const nomeItem = this.formatarNomeItem(item.name);
           const preco = this.formatarPreco(item.basePrice);
-          cardapio += `• ${nomeItem} — R$ ${preco}\n`;
+          catalogText += `• ${nomeItem} — R$ ${preco}\n`;
         });
 
-        cardapio += "\n";
+        catalogText += "\n";
       }
     });
 
-    return cardapio.trim();
+    return catalogText.trim();
+  }
+
+  private async loadFromAPI(): Promise<MenuItem[]> {
+    if (!this.config.catalog.api_url) {
+      throw new Error("api_url não configurado");
+    }
+
+    logger.info(`[${this.clientId}] Buscando catálogo via API: ${this.config.catalog.api_url}`);
+    const response = await fetch(this.config.catalog.api_url);
+
+    if (!response.ok) {
+      throw new Error(`Erro ao buscar catálogo da API: ${response.statusText}`);
+    }
+
+    const data = (await response.json()) as any;
+    return this.parseCatalogData(data);
+  }
+
+  private async loadFromJSON(): Promise<MenuItem[]> {
+    if (!this.config.catalog.json_path) {
+      throw new Error("json_path não configurado");
+    }
+
+    // Caminho relativo a src/clients/{clientId}/
+    const jsonPath = path.resolve(process.cwd(), "src", "clients", this.clientId, this.config.catalog.json_path);
+
+    logger.info(`[${this.clientId}] Carregando catálogo de arquivo JSON: ${jsonPath}`);
+
+    if (!fs.existsSync(jsonPath)) {
+      throw new Error(`Arquivo JSON do catálogo não encontrado: ${jsonPath}`);
+    }
+
+    const fileContents = fs.readFileSync(jsonPath, "utf8");
+    const data = JSON.parse(fileContents);
+    return this.parseCatalogData(data);
+  }
+
+  private getNestedValue(obj: any, path: string): any {
+    return path.split(".").reduce((current, key) => current?.[key], obj);
+  }
+
+  private normalizeItem(rawItem: any): MenuItem {
+    const mapping = this.config.catalog.field_mapping || {
+      name: "name",
+      price: "basePrice",
+      category: "category.name",
+      active: "active",
+      showOnWebsite: "showOnWebsite"
+    };
+
+    // Extrai valores usando o mapeamento
+    const name = this.getNestedValue(rawItem, mapping.name) || rawItem[mapping.name];
+    const price = this.getNestedValue(rawItem, mapping.price) ?? rawItem[mapping.price];
+
+    // Categoria pode ser string direta ou objeto com name
+    let categoryName: string;
+    if (mapping.category.includes(".")) {
+      categoryName = this.getNestedValue(rawItem, mapping.category) || "Outros";
+    } else {
+      const categoryValue = rawItem[mapping.category];
+      categoryName = typeof categoryValue === "string" ? categoryValue : categoryValue?.name || "Outros";
+    }
+
+    // Campos opcionais com valores padrão
+    const active = mapping.active ? this.getNestedValue(rawItem, mapping.active) ?? rawItem[mapping.active] ?? true : true;
+
+    const showOnWebsite = mapping.showOnWebsite
+      ? this.getNestedValue(rawItem, mapping.showOnWebsite) ?? rawItem[mapping.showOnWebsite] ?? true
+      : true;
+
+    // Validação básica
+    if (!name || price === undefined || price === null) {
+      throw new Error(`Item inválido: falta 'name' ou 'price'. Item: ${JSON.stringify(rawItem)}`);
+    }
+
+    return {
+      id: rawItem.id || Math.random(), // ID opcional, gera se não existir
+      name: String(name),
+      basePrice: Number(price),
+      active: Boolean(active),
+      showOnWebsite: Boolean(showOnWebsite),
+      category: {
+        id: rawItem.category?.id || 0,
+        name: String(categoryName)
+      },
+      description: rawItem.description
+    };
+  }
+
+  private parseCatalogData(data: any): MenuItem[] {
+    let rawItems: any[] = [];
+
+    if (Array.isArray(data)) {
+      rawItems = data;
+    } else if (data.items && Array.isArray(data.items)) {
+      rawItems = data.items;
+    } else {
+      throw new Error("Formato de catálogo inválido. Esperado array ou objeto com propriedade 'items'");
+    }
+
+    // Normaliza cada item usando o mapeamento
+    const items: MenuItem[] = [];
+    for (const rawItem of rawItems) {
+      try {
+        const normalizedItem = this.normalizeItem(rawItem);
+        items.push(normalizedItem);
+      } catch (error) {
+        logger.warn(`[${this.clientId}] Item ignorado devido a erro: ${error}`);
+      }
+    }
+
+    // Filtrar ativos
+    const activeItems = items.filter((i) => i.active && i.showOnWebsite);
+
+    if (activeItems.length === 0) {
+      logger.warn(`[${this.clientId}] Catálogo vazio ou nenhum item ativo encontrado.`);
+    }
+
+    return activeItems;
   }
 
   async getMenu(): Promise<{ items: MenuItem[]; rendered: string }> {
@@ -104,27 +215,15 @@ export class MenuService {
     }
 
     try {
-      logger.info(`Buscando menu em: ${this.config.menu.api_url}`);
-      const response = await fetch(this.config.menu.api_url);
+      let items: MenuItem[];
 
-      if (!response.ok) {
-        throw new Error(`Erro ao buscar menu: ${response.statusText}`);
-      }
-
-      const data = (await response.json()) as any; // Assumindo resposta direta ou array
-
-      let items: MenuItem[] = [];
-      if (Array.isArray(data)) {
-        items = data;
-      } else if (data.items && Array.isArray(data.items)) {
-        items = data.items;
-      }
-
-      // Filtrar ativos
-      items = items.filter((i) => i.active && i.showOnWebsite);
-
-      if (items.length === 0) {
-        logger.warn("Menu vazio ou nenhum item ativo encontrado.");
+      // Prioridade: API > JSON
+      if (this.config.catalog.api_url) {
+        items = await this.loadFromAPI();
+      } else if (this.config.catalog.json_path) {
+        items = await this.loadFromJSON();
+      } else {
+        throw new Error("Nenhuma fonte de catálogo configurada (api_url ou json_path)");
       }
 
       const rendered = this.formatMenuText(items);
@@ -137,9 +236,10 @@ export class MenuService {
 
       return { items, rendered };
     } catch (error) {
-      logger.error("Falha ao buscar menu", error);
-      // Se falhar e tiver cache antigo, retorna ele mesmo expirado?
+      logger.error(`[${this.clientId}] Falha ao carregar catálogo`, error);
+      // Se falhar e tiver cache antigo, retorna ele mesmo expirado
       if (this.cache) {
+        logger.warn(`[${this.clientId}] Usando cache expirado devido ao erro`);
         return { items: this.cache.items, rendered: this.cache.formattedText };
       }
       throw error;
