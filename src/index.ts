@@ -4,13 +4,12 @@ import { PromptGuard } from "./core/llm/guard.js";
 import { LLMModel } from "./core/llm/model.js";
 import { PromptBuilder } from "./core/llm/promptBuilder.js";
 import { MenuService } from "./core/menu/menuService.js";
-import { OrderParser } from "./core/orders/orderParser.js";
-import { OrderRepository } from "./core/orders/orderRepo.js";
 import { ConversationManager } from "./core/orders/orderState.js";
-import { Order } from "./core/orders/orderTypes.js";
 import { createClientLogger } from "./core/utils/logger.js";
 import { BaileysProvider } from "./core/whatsapp/baileys.js";
 import { GroupCommandManager } from "./core/whatsapp/groupCommandManager.js";
+import { WorkflowContext } from "./core/workflows/base/types.js";
+import { getWorkflowHandler } from "./core/workflows/factory.js";
 import { startServer } from "./server.js";
 
 // ID do cliente (obrigatório via env var)
@@ -44,10 +43,12 @@ async function main() {
     const promptBuilder = new PromptBuilder();
     const llm = new LLMModel(config);
     const guard = new PromptGuard();
-    const parser = new OrderParser();
-    const orderRepo = new OrderRepository(CLIENT_ID);
     const conversationManager = new ConversationManager(CLIENT_ID);
     const whatsapp = new BaileysProvider(CLIENT_ID);
+
+    // Workflow Handler Factory
+    const workflowHandler = getWorkflowHandler(config);
+    clientLogger.info(`Workflow ativo: ${config.workflow?.type || "commerce"}`);
 
     // 2.5. Configurar sistema de comandos de grupo
     const commandGroupId = process.env[getEnvVarName("COMMAND_GROUP_ID", CLIENT_ID)] || null;
@@ -96,9 +97,8 @@ async function main() {
         case "pause":
           if (command.targetPhone) {
             commandManager.pauseNumber(command.targetPhone);
-            response = `⏸️ Bot pausado para ${
-              command.targetPhone.split("@")[0]
-            }. Agora você pode assumir o atendimento manualmente.`;
+            response = `⏸️ Bot pausado para ${command.targetPhone.split("@")[0]
+              }. Agora você pode assumir o atendimento manualmente.`;
           } else {
             response = `❌ Por favor, informe o número: /stop <número> ou /<número>`;
           }
@@ -162,9 +162,12 @@ async function main() {
         const menu = await menuService.getMenu();
 
         // B. Monta Prompt
-        // Injetamos histórico recente (ex: últimas 10 trocas)
+        // Injetamos histórico recente
         const history = state.history.map((m) => ({ role: m.role, content: m.content }));
-        const systemPrompt = promptBuilder.build(config, menu.rendered);
+
+        // Obtém instruções JSON dinâmicas do workflow
+        const jsonInstructions = workflowHandler.getPromptSnippet(config, menu.rendered);
+        const systemPrompt = promptBuilder.build(config, menu.rendered, jsonInstructions);
 
         // C. Gera Resposta LLM
         clientLogger.info(`Gerando resposta LLM...`);
@@ -188,80 +191,33 @@ async function main() {
           }
         }
 
-        // E. Extração de Pedido (JSON Oculto)
-        const orderExtraction = parser.extract(answer);
-        let finalMessage = parser.cleanResponse(answer);
+        // E. Processamento de Workflow (Extração e Ação)
+        // Monta contexto para o workflow
+        const workflowContext: WorkflowContext = {
+          clientId: CLIENT_ID,
+          phone: msg.from,
+          config,
+          logger: clientLogger,
+          whatsapp
+        };
 
-        if (orderExtraction) {
-          clientLogger.info("Pedido detectado!", orderExtraction);
+        const result = await workflowHandler.processResponse(answer, workflowContext);
+        let finalMessage = result.cleanedResponse;
 
-          // F. Salvar Pedido (Recalcular total)
-          // Aqui validamos preços
-          let total = 0;
-          const confirmedItems = [];
+        if (result.actionNeeded && result.data) {
+          clientLogger.info("Ação de workflow detectada!", result.data);
 
-          for (const item of orderExtraction.items) {
-            const price = menuService.getItemPrice(item.name);
-            if (price !== null) {
-              total += price * item.quantity;
-              confirmedItems.push({
-                ...item,
-                priceAtMoment: price
-              });
-            } else {
-              clientLogger.warn(`Item não encontrado no menu ao fechar pedido: ${item.name}`);
-              // Tratar erro: avisar usuário? Por enquanto segue.
+          try {
+            // Executa ação (salvar, notificar, etc)
+            await workflowHandler.executeAction(result.data, workflowContext);
+
+            // Se a mensagem final estiver vazia, gera um fallback genérico
+            if (!finalMessage.trim()) {
+              finalMessage = "✅ Tudo certo! Já registrei aqui. Qualquer dúvida é só chamar!";
             }
-          }
-
-          // Adicionar taxa entrega?
-          // if (orderExtraction.deliveryNeeded && config.delivery.enabled) ...
-
-          const newOrder: Order = {
-            id: Date.now().toString(), // uuidv4() seria melhor
-            customerPhone: msg.from,
-            items: orderExtraction.items,
-            total: total, // Preço validado
-            status: "pending",
-            deliveryNeeded: orderExtraction.deliveryNeeded,
-            address: orderExtraction.address,
-            paymentMethod: orderExtraction.paymentMethod,
-            createdAt: new Date().toISOString()
-          };
-
-          await orderRepo.save(newOrder);
-
-          // Notificação para o Grupo
-          const notificationGroupId = process.env[getEnvVarName("NOTIFICATION_GROUP_ID", CLIENT_ID)];
-          if (notificationGroupId) {
-            const groupMessage = `🚨 *NOVO PEDIDO DETECTADO* 🚨\n\n👤 Cliente: ${msg.from.split("@")[0]}\n🆔 Pedido: ${
-              newOrder.id
-            }\n📍 Entrega: ${newOrder.deliveryNeeded ? "Sim" : "Não"}\n${
-              newOrder.address ? `🏠 Endereço: ${newOrder.address}\n` : ""
-            }💰 Pagamento: ${newOrder.paymentMethod || "A combinar"}\n\n📋 *Itens:*\n${newOrder.items
-              .map((i) => `- ${i.quantity}x ${i.name} ${i.observation ? `(${i.observation})` : ""}`)
-              .join("\n")}\n\n💵 *Total Estimado:* R$ ${newOrder.total.toFixed(2)}`;
-
-            try {
-              await whatsapp.sendText(notificationGroupId, groupMessage);
-              clientLogger.info(`Notificação enviada para o grupo ${notificationGroupId}`);
-            } catch (error) {
-              clientLogger.error(`Erro ao enviar notificação para o grupo ${notificationGroupId}`, error);
-            }
-          } else {
-            clientLogger.warn(
-              `${getEnvVarName("NOTIFICATION_GROUP_ID", CLIENT_ID)} não configurado na env, notificação de grupo pulada.`
-            );
-          }
-
-          // Se o LLM não gerou texto de confirmação (só JSON), geramos um padrão
-          if (!finalMessage.trim()) {
-            finalMessage = `✅ *Pedido Confirmado!*
-
-Seu pedido #${newOrder.id} foi recebido com sucesso!
-Total estimado: R$ ${newOrder.total.toFixed(2)}
-
-Já estamos preparando tudo. Qualquer dúvida é só chamar!`;
+          } catch (actionError) {
+            clientLogger.error("Erro ao executar ação do workflow", actionError);
+            finalMessage = "Desculpe, tive um erro ao salvar seu registro. Pode tentar novamente?";
           }
         }
 

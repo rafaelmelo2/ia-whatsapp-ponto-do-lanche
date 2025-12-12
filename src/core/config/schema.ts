@@ -1,6 +1,12 @@
 import { z } from "zod";
 
 export const ConfigSchema = z.object({
+  workflow: z
+    .object({
+      type: z.enum(["commerce", "appointment"]).default("commerce")
+    })
+    .optional()
+    .default({ type: "commerce" }),
   store: z.object({
     id: z.string(),
     name: z.string(),
@@ -15,15 +21,17 @@ export const ConfigSchema = z.object({
   payments: z.object({
     methods: z.array(z.string())
   }),
-  delivery: z.object({
-    enabled: z.boolean(),
-    fee_by_neighborhood: z.boolean().optional(),
-    eta_min: z.number(),
-    eta_max: z.number(),
-    minimum_fee: z.number().optional(),
-    packaging_fee: z.number().optional(), // Taxa de embalagem por item (genérico)
-    packaging_fee_label: z.string().optional().default("Taxa de embalagem") // Label customizável
-  }),
+  delivery: z
+    .object({
+      enabled: z.boolean(),
+      fee_by_neighborhood: z.boolean().optional(),
+      eta_min: z.number().optional(),
+      eta_max: z.number().optional(),
+      minimum_fee: z.number().optional(),
+      packaging_fee: z.number().optional(), // Taxa de embalagem por item (genérico)
+      packaging_fee_label: z.string().optional().default("Taxa de embalagem") // Label customizável
+    })
+    .optional(), // Delivery agora é opcional - nem todo comércio precisa
   catalog: z
     .object({
       // Opção 1: Carregar de uma API (prioridade se ambos estiverem definidos)
@@ -80,6 +88,12 @@ export const ConfigSchema = z.object({
   conversation: z
     .object({
       timeout_minutes: z.number().default(5) // Timeout em minutos (padrão: 5 minutos)
+    })
+    .optional(),
+  locale: z
+    .object({
+      timezone: z.string().default("America/Sao_Paulo"), // Timezone (ex: "America/Sao_Paulo", "America/New_York", "Europe/London")
+      language: z.string().default("pt-BR") // Locale para formatação (ex: "pt-BR", "en-US", "es-ES")
     })
     .optional()
 });

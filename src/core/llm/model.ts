@@ -67,10 +67,10 @@ export class LLMModel {
         thought,
         usage: completion.usage
           ? {
-              prompt_tokens: completion.usage.prompt_tokens,
-              completion_tokens: completion.usage.completion_tokens,
-              total_tokens: completion.usage.total_tokens
-            }
+            prompt_tokens: completion.usage.prompt_tokens,
+            completion_tokens: completion.usage.completion_tokens,
+            total_tokens: completion.usage.total_tokens
+          }
           : undefined
       };
     } catch (error) {
