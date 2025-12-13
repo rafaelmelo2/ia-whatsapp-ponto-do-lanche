@@ -1,0 +1,51 @@
+{
+  "phone": "556499335575@s.whatsapp.net",
+  "history": [
+    {
+      "role": "user",
+      "content": "oi",
+      "timestamp": 1765574404949
+    },
+    {
+      "role": "user",
+      "content": "oi",
+      "timestamp": 1765574453676
+    },
+    {
+      "role": "assistant",
+      "content": "Oi! 😄 Seja bem-vindo(a) à *Ponto do Lanche*!\n\nComo posso te ajudar hoje? \n\nEstamos com um cardápio incrível:\n🍔 _HAMBÚRGUERES_ (de R$ 19 a R$ 30)\n🥩 _LOMBOS_ (de R$ 21,50 a R$ 23,50)  \n🍗 _SANDUÍCHES DE FRANGO_ (R$ 23 a R$ 25)\n🥗 _VEGETARIANOS_ (R$ 24)\n🥤 _BEBIDAS_ (refris, cervejas, sucos)\n\nVai ser *entrega* ou *retirada*? E o que vai querer pedir? 😊",
+      "timestamp": 1765574463403
+    },
+    {
+      "role": "user",
+      "content": "quero um xtudo pra retirada",
+      "timestamp": 1765574484387
+    },
+    {
+      "role": "assistant",
+      "content": "Perfeito! Um *X-tudo* por R$ 30,00 para retirada. 😋\n\nPara retirada temos uma taxa de embalagem de R$ 0,50 por sanduíche, então ficaria R$ 30,50 no total.\n\nVai querer alguma bebida para acompanhar? Temos:\n• Refrigerantes (de R$ 3,50 a R$ 13,00)\n• Cervejas (de R$ 5,00 a R$ 9,00) \n• Sucos e cremes (de R$ 10,00 a R$ 14,00)\n\nOu quer fechar só com o X-tudo mesmo?",
+      "timestamp": 1765574496510
+    },
+    {
+      "role": "user",
+      "content": "e uma coca 600",
+      "timestamp": 1765574520390
+    },
+    {
+      "role": "assistant",
+      "content": "      Certo! Então seu pedido é:\n• 1 X-tudo - R$ 30,00\n• 1 Coca Cola 600ml - R$ 8,00\n\n_Subtotal: R$ 38,00_\n+ Taxa de embalagem (retirada): R$ 0,50\n_TOTAL: R$ 38,50_\n\nVai querer mais alguma coisa? Ou posso fechar o pedido? 😊",
+      "timestamp": 1765574526243
+    },
+    {
+      "role": "user",
+      "content": "só isso mesmo quantos minutos",
+      "timestamp": 1765574542460
+    },
+    {
+      "role": "assistant",
+      "content": "Perfeito! Pedido confirmado! ✅\n\n*Seu pedido:*\n• 1 X-tudo\n• 1 Coca Cola 600ml\n\n_Total: R$ 38,50_ (já incluindo a taxa de embalagem de R$ 0,50)\n\n⏰ O pedido fica pronto em aproximadamente *20 a 50 minutos*. Você pode vir buscar quando receber a confirmação!\n\nQual será a forma de pagamento? Temos: Pix, Cartão de Crédito/Débito ou Dinheiro.\n\nObrigado pelo pedido! 😊🍔",
+      "timestamp": 1765574555466
+    }
+  ],
+  "lastInteraction": 1765574555466
+}

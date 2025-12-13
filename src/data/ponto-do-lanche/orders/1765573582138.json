@@ -1,0 +1,16 @@
+{
+  "id": "1765573582138",
+  "customerPhone": "556499335575@s.whatsapp.net",
+  "items": [
+    {
+      "name": "X-tudo",
+      "quantity": 1,
+      "priceAtMoment": 30
+    }
+  ],
+  "total": 30,
+  "status": "pending",
+  "deliveryNeeded": false,
+  "paymentMethod": "Pix",
+  "createdAt": "2025-12-12T21:06:22.138Z"
+}

@@ -1,0 +1,36 @@
+[
+  {
+    "id": 1,
+    "name": "Produto Exemplo 1",
+    "basePrice": 25.5,
+    "active": true,
+    "showOnWebsite": true,
+    "category": {
+      "id": 1,
+      "name": "Categoria1"
+    },
+    "description": "Descrição do produto exemplo 1"
+  },
+  {
+    "id": 2,
+    "name": "Produto Exemplo 2",
+    "basePrice": 30.0,
+    "active": true,
+    "showOnWebsite": true,
+    "category": {
+      "id": 1,
+      "name": "Categoria1"
+    }
+  },
+  {
+    "id": 3,
+    "name": "Produto Exemplo 3",
+    "basePrice": 15.75,
+    "active": true,
+    "showOnWebsite": true,
+    "category": {
+      "id": 2,
+      "name": "Categoria2"
+    }
+  }
+]

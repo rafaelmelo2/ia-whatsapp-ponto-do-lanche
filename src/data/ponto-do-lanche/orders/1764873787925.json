@@ -1,0 +1,21 @@
+{
+  "id": "1764873787925",
+  "customerPhone": "556499335575@s.whatsapp.net",
+  "items": [
+    {
+      "name": "Crazy Pig",
+      "quantity": 1,
+      "observation": ""
+    },
+    {
+      "name": "Coca Cola 220ml",
+      "quantity": 1,
+      "observation": ""
+    }
+  ],
+  "total": 27.5,
+  "status": "pending",
+  "deliveryNeeded": false,
+  "paymentMethod": "Pix",
+  "createdAt": "2025-12-04T18:43:07.925Z"
+}

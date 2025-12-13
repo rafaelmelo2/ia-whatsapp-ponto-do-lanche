@@ -1,0 +1,39 @@
+{
+  "phone": "556499335575@s.whatsapp.net",
+  "history": [
+    {
+      "role": "user",
+      "content": "Olá",
+      "timestamp": 1765420168868
+    },
+    {
+      "role": "assistant",
+      "content": "Oi! 😄 Seja bem-vindo(a) à *Ponto do Lanche*!  \nComo posso te ajudar hoje? Quer dar uma olhada no nosso cardápio ou já sabe o que vai pedir?  \n\n*LEMBRETE IMPORTANTE:*  \nHoje é *Quarta-feira, 10 de dezembro de 2025* e nosso horário de funcionamento é das *19:00 às 22:30*. **Estamos fechados no momento** ⏰.  \nVolte amanhã a partir das 19:00 para fazer seu pedido!  \n\nQualquer dúvida, chama o suporte: 📱 (64) 99933-5575.",
+      "thought": "Ah, o cliente começou com um simples \"Olá\". Vou responder com a saudação padrão da hamburgueria, mantendo o tom simpático e acolhedor. \n\nComo é a primeira interação, preciso apresentar a loja e oferecer ajuda com o cardápio ou pedido. O cliente ainda não especificou se quer fazer um pedido, então vou deixar a conversa aberta para ele escolher o que deseja.\n\nLembrei que o horário atual é 23:29 e a loja fecha às 22:30, então preciso informar que estamos fechados. Isso é importante para evitar frustrações. Vou ser educado e sugerir que volte amanhã, mantendo o bom humor com o emoji.\n\nTambém vou incluir o contato de suporte no final, conforme as instruções, caso ele precise de mais informações. Tudo dentro do escopo permitido: cardápio, pedidos e informações da loja.",
+      "timestamp": 1765420193379
+    },
+    {
+      "role": "user",
+      "content": "Quero um x bacon, vou buscar",
+      "timestamp": 1765420237516
+    },
+    {
+      "role": "assistant",
+      "content": "Olá! 😊  \nInfelizmente, estamos *fechados* no momento. Nosso horário de funcionamento é das **19:00 às 22:30** (todos os dias).  \n\nVocê pode voltar amanhã a partir das 19:00 para pedir seu *X-bacon* (R$ 25,00 + taxa de embalagem de R$ 0,50 por sanduíche na retirada).  \n\nFique à vontade para perguntar sobre o cardápio ou formas de pagamento! 😉  \nOu chama o suporte: 📱 (64) 99933-5575.",
+      "thought": "We are currently closed according to the current time (Quarta-feira, 10 de dezembro de 2025 às 23:30) and our operating hours (19:00 to 22:30). The customer wants to order an X-bacon for pickup.\n However, since we are closed, I must inform them that we are not open and suggest they come back during operating hours.",
+      "timestamp": 1765420252598
+    },
+    {
+      "role": "user",
+      "content": "cardapio",
+      "timestamp": 1765420279641
+    },
+    {
+      "role": "assistant",
+      "content": "Aqui está nosso *CARDÁPIO ATUAL* 😋  \n\n*🍔 HAMBÚRGUERES*  \n• Americano — R$ 23,00  \n• Bauru Muchulouco — R$ 22,00  \n• Da House — R$ 25,00  \n• Misto Quente — R$ 19,00  \n• X Salada — R$ 23,00  \n• X Salada Especial — R$ 24,00  \n• X-bacon — R$ 25,00  \n• X-bacon Especial — R$ 26,00  \n• X-burguer — R$ 21,00  \n• X-pitikão — R$ 28,00  \n• X-rango — R$ 27,00  \n• X-tudo — R$ 30,00  \n\n*🥩 LOMBOS*  \n• Crazy Pig — R$ 23,50  \n• Porquinho Pratico — R$ 21,50  \n• Ultimo Tango — R$ 23,00  \n• Valsa Do Adeus — R$ 23,50  \n\n*🍗 FRANGO*  \n• X-frango Especial — R$ 25,00  \n• X-salada Com Frango — R$ 23,00  \n\n*🥗 VEGETARIANO*  \n• Vegetariano — R$ 24,00  \n\n*🥤 BEBIDAS*  \n• Refrigerantes (Coca, Fanta, Guaraná) — R$ 3,50 a R$ 13,00  \n• Cervejas (Skol, Brahma, Heineken) — R$ 5,00 a R$ 9,00  \n• Sucos e Cremes — R$ 10,00 a R$ 14,00  \n\n*🔸 ADICIONAIS*  \n• Abacaxi, Cheddar, Frango, Hambúrguer extra, etc — R$ 0,50 a R$ 4,00  \n\n⚠️ *ATENÇÃO:* Estamos *FECHADOS* no momento (23:31). Funcionamos das **19h às 22h30** todos os dias! Volte amanhã para pedir 😊  \n\nQuer detalhes de algum item?",
+      "thought": "We are currently closed (as per the current date and time provided: Quarta-feira, 10 de dezembro de 2025 às 23:31, and the store hours are 19:00 to 22:30). However, the customer asked for the menu, so I will provide it but remind them we are closed.",
+      "timestamp": 1765420310225
+    }
+  ],
+  "lastInteraction": 1765420310225
+}

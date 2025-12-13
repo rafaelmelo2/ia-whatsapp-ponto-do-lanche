@@ -1,0 +1,15 @@
+{
+  "id": "1765585991620",
+  "customerPhone": "556499335575@s.whatsapp.net",
+  "items": [
+    {
+      "name": "Bolaroid",
+      "quantity": 3,
+      "priceAtMoment": 8
+    }
+  ],
+  "total": 24,
+  "status": "pending",
+  "deliveryNeeded": false,
+  "createdAt": "2025-12-13T00:33:11.620Z"
+}

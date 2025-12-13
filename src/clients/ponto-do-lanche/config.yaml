@@ -1,0 +1,63 @@
+store:
+  id: "ponto-do-lanche"
+  name: "Ponto do Lanche"
+  type: "Hamburgueria"
+  phone: "+5511999999999"
+
+hours:
+  open: "19:00"
+  close: "22:30"
+  days_open: ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"]
+
+payments:
+  methods: ["Pix", "Cartão de Crédito/Débito", "Dinheiro"]
+
+delivery:
+  enabled: true
+  fee_by_neighborhood: true
+  eta_min: 20
+  eta_max: 50
+  minimum_fee: 5.00
+  packaging_fee: 0.50
+  packaging_fee_label: "Taxa de embalagem"
+
+catalog:
+  api_url: "http://129.153.92.154/api/menu/items"
+  currency: "BRL"
+  name: "Cardápio"
+  item_name: "sanduíche"
+  categories:
+    "Hamburger": { emoji: "🍔", name: "Hambúrgueres" }
+    "Lombo": { emoji: "🥩", name: "Lombos" }
+    "Frango": { emoji: "🍗", name: "Sanduíches de Frango" }
+    "Vegetariano": { emoji: "🥗", name: "Vegetarianos" }
+    "Refrigerantes": { emoji: "🥤", name: "Refrigerantes" }
+    "Cervejas": { emoji: "🍺", name: "Cervejas" }
+    "Sucos e cremes": { emoji: "🧃", name: "Sucos e Cremes" }
+  category_order: ["Hamburger", "Lombo", "Frango", "Vegetariano", "Refrigerantes", "Cervejas", "Sucos e cremes"]
+
+upsell:
+  default_suggestions: ["creme de morango", "refrigerante"]
+  best_sellers_tag: "mais_vendido"
+
+tone:
+  greeting: "Oi! 😄 Seja bem-vindo(a) à *Ponto do Lanche*!"
+  emojis: "moderado"
+  style: "simpático, direto, vendedor"
+
+test:
+  enabled: true
+  message: "Estamos em fase de teste. Qualquer dúvida, entre em contato com o suporte @64999335575"
+
+llm:
+  # Modelo do Chutes.ai (DeepSeek V3)
+  # model: "deepseek-ai/DeepSeek-V3"
+  model: "deepseek-ai/DeepSeek-V3.1"
+  # model: "deepseek-ai/DeepSeek-R1-0528"
+  # model: "openai/gpt-oss-120b"
+  # model: "deepseek-ai/DeepSeek-V3.2"
+  temperature: 0.5
+  max_tokens: 10000
+
+conversation:
+  timeout_minutes: 5 # Tempo de inatividade em minutos antes de reiniciar a conversa

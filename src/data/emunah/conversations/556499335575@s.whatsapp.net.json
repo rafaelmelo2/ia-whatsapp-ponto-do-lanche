@@ -1,0 +1,41 @@
+{
+  "phone": "556499335575@s.whatsapp.net",
+  "history": [
+    {
+      "role": "user",
+      "content": "oi quero 3 bolaroids",
+      "timestamp": 1765586106400
+    },
+    {
+      "role": "assistant",
+      "content": "Ótimo! Você quer 3 unidades do _Bolaroid_, que custa R$ 8,00 cada. O total ficaria em R$ 24,00. 😊  \n\nAlgumas perguntinhas para completar seu pedido:  \n1. Você vai retirar na loja ou precisa de entrega?  \n2. Qual será a forma de pagamento: Pix ou cartão?  \n\nE se quiser, pode me enviar as fotos para personalização! Basta anexá-las aqui. 📸  \n\nMe avise se precisar de mais algo!",
+      "timestamp": 1765586125757
+    },
+    {
+      "role": "user",
+      "content": "[IMAGEM_ENVIADA:3EB04A39ED324CD7D771D5] [IMAGEM_ENVIADA:3EB08F244517429D807334] [imagem]\n[IMAGEM_ENVIADA:3EB07DE64D98D536BF7FF9] [imagem]\n[IMAGEM_ENVIADA:3EB04A39ED324CD7D771D5] [imagem]",
+      "timestamp": 1765586160222
+    },
+    {
+      "role": "assistant",
+      "content": "Vou processar todas as fotos enviadas para seu pedido de 3 Bolaroids. Um momento, por favor...  \n\n✅ *Fotos confirmadas:*  \n- 1ª foto para o 1º Bolaroid  \n- 2ª foto para o 2º Bolaroid  \n- 3ª foto para o 3º Bolaroid  \n\nAgora só preciso de mais 2 informações:  \n1. Seu *nome completo* para o pedido.  \n2. Se *autoriza* a gente a usar essas fotos em nossas redes sociais (sim/não)?  \n\nE já aproveito para lembrar:  \n• Valor total: R$ 24,00 + frete (se for delivery).  \n• Pagamento via Pix ou cartão.  \n\nMe confirma esses detalhes e já fechamos! 😊",
+      "timestamp": 1765586199381
+    },
+    {
+      "role": "user",
+      "content": "Rafael da Silva Melo\nVou retirar",
+      "timestamp": 1765586214426
+    },
+    {
+      "role": "assistant",
+      "content": "Ótimo, Rafael! Vou finalizar seu pedido agora mesmo.  \n\nVocê confirmou:  \n• 3 Bolaroids — R$ 24,00 (retirada na loja).  \n• Fotos personalizadas já recebidas.  \n\nSó falta confirmar: você autoriza a postagem das fotos para nossos conteúdos? (sim/não)  \n\nAssim que responder, fechamos o pedido! 😊",
+      "timestamp": 1765586226331
+    },
+    {
+      "role": "user",
+      "content": "Autorizo",
+      "timestamp": 1765586233479
+    }
+  ],
+  "lastInteraction": 1765586233479
+}

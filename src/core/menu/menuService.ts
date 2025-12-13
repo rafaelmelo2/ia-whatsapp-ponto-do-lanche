@@ -24,7 +24,7 @@ export class MenuService {
 
   private getEmojiCategoria(categoriaNome: string): string {
     // Usa emoji da configuração se disponível
-    if (this.config.catalog.categories && this.config.catalog.categories[categoriaNome]) {
+    if (this.config.catalog?.categories && this.config.catalog.categories[categoriaNome]) {
       return this.config.catalog.categories[categoriaNome].emoji;
     }
     // Fallback genérico se não configurado
@@ -58,7 +58,7 @@ export class MenuService {
     const todasCategorias = Object.keys(agrupados);
 
     // Usa ordem configurada ou ordem alfabética como fallback
-    const ordemCategoriasConfig = this.config.catalog.category_order || [];
+    const ordemCategoriasConfig = this.config.catalog?.category_order || [];
     const categoriasConhecidas = ordemCategoriasConfig.filter((c) => todasCategorias.includes(c));
     const categoriasDesconhecidas = todasCategorias.filter((c) => !ordemCategoriasConfig.includes(c)).sort();
 
@@ -70,7 +70,7 @@ export class MenuService {
 
         // Usa nome formatado da config ou o nome original da categoria
         let nomeFormatado = categoriaNome;
-        if (this.config.catalog.categories && this.config.catalog.categories[categoriaNome]) {
+        if (this.config.catalog?.categories && this.config.catalog.categories[categoriaNome]) {
           nomeFormatado = this.config.catalog.categories[categoriaNome].name;
         }
 
@@ -90,7 +90,7 @@ export class MenuService {
   }
 
   private async loadFromAPI(): Promise<MenuItem[]> {
-    if (!this.config.catalog.api_url) {
+    if (!this.config.catalog?.api_url) {
       throw new Error("api_url não configurado");
     }
 
@@ -106,7 +106,7 @@ export class MenuService {
   }
 
   private async loadFromJSON(): Promise<MenuItem[]> {
-    if (!this.config.catalog.json_path) {
+    if (!this.config.catalog?.json_path) {
       throw new Error("json_path não configurado");
     }
 
@@ -129,7 +129,7 @@ export class MenuService {
   }
 
   private normalizeItem(rawItem: any): MenuItem {
-    const mapping = this.config.catalog.field_mapping || {
+    const mapping = this.config.catalog?.field_mapping || {
       name: "name",
       price: "basePrice",
       category: "category.name",
@@ -218,9 +218,9 @@ export class MenuService {
       let items: MenuItem[];
 
       // Prioridade: API > JSON
-      if (this.config.catalog.api_url) {
+      if (this.config.catalog?.api_url) {
         items = await this.loadFromAPI();
-      } else if (this.config.catalog.json_path) {
+      } else if (this.config.catalog?.json_path) {
         items = await this.loadFromJSON();
       } else {
         throw new Error("Nenhuma fonte de catálogo configurada (api_url ou json_path)");

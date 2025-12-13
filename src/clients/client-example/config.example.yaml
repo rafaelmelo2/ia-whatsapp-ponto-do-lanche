@@ -1,0 +1,82 @@
+store:
+  id: "nome-do-estabelecimento"
+  name: "Nome do Estabelecimento"
+  type: "Loja" # Exemplos: "Hamburgueria", "Loja de Artesanato", "Restaurante", "Loja de Roupas", etc.
+  phone: "+5511999999999"
+
+hours:
+  open: "09:00"
+  close: "18:00"
+  days_open: ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"]
+
+payments:
+  methods: ["Pix", "Cartão de Crédito/Débito", "Dinheiro"]
+
+delivery:
+  enabled: true
+  fee_by_neighborhood: true
+  eta_min: 30
+  eta_max: 60
+  minimum_fee: 5.00 # Frete mínimo (opcional)
+  packaging_fee: 0.50 # Taxa de embalagem por item (opcional)
+  packaging_fee_label: "Taxa de embalagem" # Label customizável (opcional)
+
+catalog:
+  # OPÇÃO 1: Carregar de uma API (recomendado se você tem uma API)
+  api_url: "http://exemplo.com/api/produtos"
+
+  # OPÇÃO 2: Carregar de um arquivo JSON local (caminho relativo a src/clients/{clientId}/)
+  # Se você usar json_path, coloque o arquivo em: src/clients/{clientId}/catalog.json
+  json_path: "src/clients/client-example/catalog.example.json"
+
+  # IMPORTANTE: Use apenas UMA das opções acima (api_url OU json_path)
+  # Se ambas estiverem definidas, a API terá prioridade
+
+  currency: "BRL"
+  name: "Catálogo" # Nome do catálogo (ex: "Cardápio", "Catálogo", "Lista de Produtos")
+  item_name: "item" # Nome genérico do item (ex: "produto", "peça", "sanduíche", "artigo")
+
+  # Mapeamento de campos (opcional) - use apenas se seu JSON tiver estrutura diferente
+  # Se não definir, assume: name, basePrice, category.name, active, showOnWebsite
+  # field_mapping:
+  #   name: "nome"              # Se seu JSON usa "nome" em vez de "name"
+  #   price: "preco"            # Se seu JSON usa "preco" em vez de "basePrice"
+  #   category: "categoria"     # Se categoria é string direta: "categoria" ou objeto: "categoria.nome"
+  #   active: "ativo"           # Opcional - se não existir, assume true
+  #   showOnWebsite: "visivel"  # Opcional - se não existir, assume true
+
+  # Personalização visual das categorias (opcional)
+  categories:
+    "Categoria1": { emoji: "🔸", name: "Nome Formatado da Categoria 1" }
+    "Categoria2": { emoji: "🔹", name: "Nome Formatado da Categoria 2" }
+
+  # Ordem preferida das categorias (opcional)
+  category_order: ["Categoria1", "Categoria2"]
+
+upsell:
+  default_suggestions: ["item1", "item2", "item3"]
+  best_sellers_tag: "mais_vendido"
+
+tone:
+  greeting: "Oi! 😄 Seja bem-vindo(a) à *Nome do Estabelecimento*!"
+  emojis: "moderado" # Exemplos: "muitos", "moderado", "poucos", "nenhum"
+  style: "simpático, direto, vendedor" # Descreva o tom de voz desejado
+
+test:
+  enabled: false
+  message: "Estamos em fase de teste. Qualquer dúvida, entre em contato com o suporte @seu_numero_whatsapp"
+
+llm:
+  # Modelo do Chutes.ai (DeepSeek V3)
+  # model: "deepseek-ai/DeepSeek-V3"
+  model: "deepseek-ai/DeepSeek-R1-0528"
+  # model: "openai/gpt-oss-120b"
+  temperature: 0.5
+  max_tokens: 10000
+  # Regras específicas do negócio (opcional)
+  business_rules:
+    - "Regra de negócio específica 1"
+    - "Regra de negócio específica 2"
+
+conversation:
+  timeout_minutes: 5 # Tempo de inatividade em minutos antes de reiniciar a conversa

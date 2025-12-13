@@ -1,0 +1,86 @@
+store:
+  id: "emunah"
+  name: "Emunah"
+  type: "Loja de Artesanato" # Exemplos: "Hamburgueria", "Loja de Artesanato", "Restaurante", "Loja de Roupas", etc.
+  phone: "+5511999999999"
+
+hours:
+  open: "09:00"
+  close: "18:00"
+  days_open: ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"]
+
+payments:
+  methods: ["Pix", "Cartão de Crédito/Débito"]
+
+delivery:
+  enabled: true
+  fee_by_neighborhood: true
+  eta_min: 4320 # Tempo mínimo estimado em minutos (3 dias = 4320 minutos)
+  eta_max: 20160 # Tempo máximo estimado em minutos (2 semanas = 20160 minutos)
+  minimum_fee: 8.00 # Frete mínimo (opcional)
+
+catalog:
+  json_path: "catalog.json"
+
+  # IMPORTANTE: Use apenas UMA das opções acima (api_url OU json_path)
+  # Se ambas estiverem definidas, a API terá prioridade
+
+  currency: "BRL"
+  name: "Catálogo" # Nome do catálogo (ex: "Cardápio", "Catálogo", "Lista de Produtos")
+  item_name: "produto" # Nome genérico do item (ex: "produto", "peça", "sanduíche", "artigo")
+
+  # Mapeamento de campos (opcional) - use apenas se seu JSON tiver estrutura diferente
+  # Se não definir, assume: name, basePrice, category.name, active, showOnWebsite
+  field_mapping:
+    name: "nome" # Seu JSON usa "nome" em vez de "name"
+    price: "preco" # Seu JSON usa "preco" em vez de "basePrice"
+    category: "categoria" # Seu JSON usa "categoria" como string direta
+    # active: "ativo"           # Opcional - se não existir, assume true
+    # showOnWebsite: "visivel"  # Opcional - se não existir, assume true
+
+  # Personalização visual das categorias (opcional)
+  categories:
+    "Decoração Natalina": { emoji: "🎄", name: "Decoração Natalina" }
+    "Polaroids e Fotos": { emoji: "📸", name: "Polaroids e Fotos" }
+    "Quadros": { emoji: "🖼️", name: "Quadros" }
+    "Chaveiros": { emoji: "🔑", name: "Chaveiros" }
+    "Álbuns e Livros": { emoji: "📚", name: "Álbuns e Livros" }
+    "Acessórios e Presentes": { emoji: "🎁", name: "Acessórios e Presentes" }
+    "Adicionais": { emoji: "➕", name: "Adicionais" }
+
+  # Ordem preferida das categorias (opcional)
+  category_order:
+    ["Decoração Natalina", "Polaroids e Fotos", "Quadros", "Chaveiros", "Álbuns e Livros", "Acessórios e Presentes", "Adicionais"]
+
+upsell:
+  default_suggestions: ["item1", "item2", "item3"]
+  best_sellers_tag: "mais_vendido"
+
+tone:
+  greeting: "Oi! 😄 Seja bem-vindo(a) à *Nome do Estabelecimento*!"
+  emojis: "moderado" # Exemplos: "muitos", "moderado", "poucos", "nenhum"
+  style: "simpático, direto, vendedor" # Descreva o tom de voz desejado
+
+test:
+  enabled: false
+  message: "Estamos em fase de teste. Qualquer dúvida, entre em contato com o suporte @seu_numero_whatsapp"
+
+llm:
+  # Modelo do Chutes.ai (DeepSeek V3)
+  # model: "deepseek-ai/DeepSeek-V3"
+  # model: "deepseek-ai/DeepSeek-R1-0528"
+  model: "deepseek-ai/DeepSeek-V3-0324"
+  # model: "openai/gpt-oss-120b"
+  temperature: 0.5
+  max_tokens: 10000
+  # Regras específicas do negócio (opcional)
+  business_rules:
+    - "Envie as fotos para personalização, com os detalhes de cada uma:"
+    - "📸 Foto → Essa será a Polaroid mini."
+    - "📸 Foto → Essa será a do chaveiro, e quero a frase 'te amo' do outro lado."
+    - "📸 Foto → Essa quero no quadro."
+    - "Sempre perguntar: Nome completo e se Autoriza postagem de fotos para outros conteúdos"
+    - "Nunca tente mostrar a prévia: exemplo: '📸 Foto → Essa será a Polaroid Mini'"
+
+conversation:
+  timeout_minutes: 5 # Tempo de inatividade em minutos antes de reiniciar a conversa

@@ -12,10 +12,12 @@ services:
       # Mas pode ser sobrescrito se necessário
       - CLIENT_ID=${CLIENT_ID:-ponto-do-lanche}
       - CHUTES_AI_API_KEY=${CHUTES_AI_API_KEY}
+      # OPENAI_API_KEY também definida para compatibilidade com bindTools do Langchain
+      - OPENAI_API_KEY=${CHUTES_AI_API_KEY}
       - PORT=3000
       - LOG_LEVEL=info
       - PONTO_DO_LANCHE_NOTIFICATION_GROUP_ID=${PONTO_DO_LANCHE_NOTIFICATION_GROUP_ID:-}
-      - PONTO_DO_LANCHE_COMMAND_GROUP_ID=${PONTO_DO_LANCHE_COMMAND_GROUP_ID:-}
+      - PONTO_DO_LANCHE_COMMANDS_GROUP_ID=${PONTO_DO_LANCHE_COMMANDS_GROUP_ID:-}
       - PONTO_DO_LANCHE_ADMIN_PHONES=${PONTO_DO_LANCHE_ADMIN_PHONES:-}
     volumes:
       # Monta dados persistentes
@@ -30,25 +32,64 @@ services:
     networks:
       - whatsapp-bot-network
 
+  # Cliente: Emunah
+  emunah:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: emunah
+    environment:
+      # CLIENT_ID será detectado automaticamente do container_name
+      # Mas pode ser sobrescrito se necessário
+      - CLIENT_ID=${CLIENT_ID:-emunah}
+      - CHUTES_AI_API_KEY=${CHUTES_AI_API_KEY}
+      # OPENAI_API_KEY também definida para compatibilidade com bindTools do Langchain
+      - OPENAI_API_KEY=${CHUTES_AI_API_KEY}
+      - PORT=3000
+      - LOG_LEVEL=info
+      - EMUNAH_NOTIFICATION_GROUP_ID=${EMUNAH_NOTIFICATION_GROUP_ID:-}
+      - EMUNAH_COMMANDS_GROUP_ID=${EMUNAH_COMMANDS_GROUP_ID:-}
+      - EMUNAH_ADMIN_PHONES=${EMUNAH_ADMIN_PHONES:-}
+    volumes:
+      # Monta dados persistentes
+      - ./src/data/emunah:/app/src/data/emunah
+      # Monta configuração do cliente (pode editar sem rebuild)
+      - ./src/clients/emunah:/app/src/clients/emunah:ro
+      # Monta logs
+      - ./logs:/app/logs
+    ports:
+      - "3001:3000"
+    restart: unless-stopped
+    networks:
+      - whatsapp-bot-network
+
   # Cliente: Exemplo (descomente e ajuste quando adicionar novo cliente)
-  # cliente-2:
+  # cliente-3:
   #   build:
   #     context: .
   #     dockerfile: Dockerfile
-  #   container_name: cliente-2
+  #   container_name: cliente-3
   #   environment:
   #     # CLIENT_ID será detectado automaticamente do container_name
-  #     - CLIENT_ID=${CLIENT_ID:-cliente-2}
+  #     # Mas pode ser sobrescrito se necessário
+  #     - CLIENT_ID=${CLIENT_ID:-cliente-3}
   #     - CHUTES_AI_API_KEY=${CHUTES_AI_API_KEY}
-  #     - PORT=3001
+  #     # OPENAI_API_KEY também definida para compatibilidade com bindTools do Langchain
+  #     - OPENAI_API_KEY=${CHUTES_AI_API_KEY}
+  #     - PORT=3000
   #     - LOG_LEVEL=info
-  #     - PONTO_DO_LANCHE_NOTIFICATION_GROUP_ID=${PONTO_DO_LANCHE_NOTIFICATION_GROUP_ID_CLIENTE_2:-}
+  #     - CLIENTE_3_NOTIFICATION_GROUP_ID=${CLIENTE_3_NOTIFICATION_GROUP_ID:-}
+  #     - CLIENTE_3_COMMANDS_GROUP_ID=${CLIENTE_3_COMMANDS_GROUP_ID:-}
+  #     - CLIENTE_3_ADMIN_PHONES=${CLIENTE_3_ADMIN_PHONES:-}
   #   volumes:
-  #     - ./src/data/cliente-2:/app/src/data/cliente-2
-  #     - ./src/clients/cliente-2:/app/src/clients/cliente-2:ro
+  #     # Monta dados persistentes
+  #     - ./src/data/cliente-3:/app/src/data/cliente-3
+  #     # Monta configuração do cliente (pode editar sem rebuild)
+  #     - ./src/clients/cliente-3:/app/src/clients/cliente-3:ro
+  #     # Monta logs
   #     - ./logs:/app/logs
   #   ports:
-  #     - "3001:3000"
+  #     - "3002:3000"
   #   restart: unless-stopped
   #   networks:
   #     - whatsapp-bot-network

@@ -1,0 +1,16 @@
+{
+  "phone": "status@broadcast",
+  "history": [
+    {
+      "role": "user",
+      "content": "As   meninas estão organizando para almoçar  na minha casa amanhã! Pensamos hoje já  para amanhã!\nGostaria da sua presença!!\nVamos descontrair um pouco!",
+      "timestamp": 1765572815433
+    },
+    {
+      "role": "assistant",
+      "content": "<think>\nWe are given a message that is outside the scope of our responsibilities as the virtual assistant for Ponto do Lanche.\n The message is about a social gathering invitation and not related to the hamburgueria's menu, orders, delivery, or payments.\n According to our instructions, we must politely decline and redirect the conversation back to the scope.\n\n Steps:\n 1. Acknowledge the message with a friendly tone.\n 2. Politely state that we can only assist with the hamburgueria's services.\n 3. Redirect the conversation by offering help with the menu or taking an order.\n\n However, note that the user's message is in Portuguese and we are to respond in Portuguese as well.\n\n Response in Portuguese:\n</think>\nOi! Que legal o convite, hein? 😊 Mas sou só o atendente virtual da *Ponto do Lanche*, então não consigo ir pra festa nem falar sobre outros assuntos. Posso te ajudar com nosso cardápio, pedidos, entregas ou pagamentos. Quer dar uma olhada nos lanches pra animar o almoço de amanhã? 🍔✨",
+      "timestamp": 1765572826318
+    }
+  ],
+  "lastInteraction": 1765572826318
+}

@@ -1,0 +1,17 @@
+{
+  "phone": "556499335575@s.whatsapp.net",
+  "history": [
+    {
+      "role": "user",
+      "content": "Quero um crazy pig e um ultimo tango",
+      "timestamp": 1764806519412
+    },
+    {
+      "role": "assistant",
+      "content": "Oi! Que ótimo, você escolheu dois dos nossos lombos mais pedidos! 😋  \n\n_*SEU PEDIDO ATUAL:*_  \n• 1x Crazy Pig (R$ 23,50)  \n• 1x Ultimo Tango (R$ 23,00)  \n_Total parcial: R$ 46,50_  \n\nPreciso saber:  \n1️⃣ É para _*RETIRADA*_ ou _*ENTREGA*_?  \n2️⃣ Qual _*FORMA DE PAGAMENTO*_? (Pix, Cartão ou Dinheiro)  \n▶️ Se for entrega, preciso do seu endereço completo com ponto de referência!  \n\nFique tranquilo(a):  \n✔️ Retirada: +R$ 0,50 por sanduíche (embalagem)  \n✔️ Entrega: frete mínimo R$ 5,00 + R$ 0,50 por sanduíche  \n\nQuer acrescentar uma bebida ou adicional? 😉",
+      "thought": "We are given an order: \"Quero um crazy pig e um ultimo tango\"\n Steps:\n 1. Confirm the items: \n    - Crazy Pig (from LOMBOS section) at R$23.50\n    - Ultimo Tango (from LOMBOS section) at R$23.00\n\n 2. Since the customer didn't specify delivery or pickup, we need to ask.\n 3. Also, we need to ask about payment method and address if delivery.\n\n However, note: the customer hasn't explicitly said \"pode fechar\" or similar, so we don't finalize yet.\n\n Let's respond by confirming the order and asking about delivery/pickup and payment.",
+      "timestamp": 1764806540222
+    }
+  ],
+  "lastInteraction": 1764806540222
+}

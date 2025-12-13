@@ -1,0 +1,20 @@
+{
+  "id": "1763952913089",
+  "customerPhone": "556499335575@s.whatsapp.net",
+  "items": [
+    {
+      "name": "X-tudo",
+      "quantity": 1,
+      "observation": ""
+    },
+    {
+      "name": "Creme De Morango",
+      "quantity": 1,
+      "observation": ""
+    }
+  ],
+  "total": 44,
+  "status": "pending",
+  "deliveryNeeded": false,
+  "createdAt": "2025-11-24T02:55:13.089Z"
+}

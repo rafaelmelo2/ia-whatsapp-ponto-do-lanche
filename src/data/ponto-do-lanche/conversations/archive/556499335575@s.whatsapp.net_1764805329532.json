@@ -1,0 +1,28 @@
+{
+  "phone": "556499335575@s.whatsapp.net",
+  "history": [
+    {
+      "role": "user",
+      "content": "Olá",
+      "timestamp": 1764805271574
+    },
+    {
+      "role": "assistant",
+      "content": "Oi! 😄 Seja *muito bem-vindo(a)* à *Ponto do Lanche*!  \nTô aqui pra te ajudar com o pedido. Você prefere *retirada* ou *delivery*?  \n\nSe quiser dar uma olhada no cardápio completo, é só pedir! 😉",
+      "thought": "Ah, um novo cliente chegou! Vou começar com a saudação padrão, mas de forma calorosa e acolhedora. \n\nO horário atual é 19:15 de quinta-feira - perfeito, estamos abertos! Posso já perguntar se será retirada ou entrega, mas sem pressionar. \n\nMelhor deixar o cliente à vontade para escolher como responder. Se ele só disse \"Olá\", talvez ainda esteja decidindo. Vou manter o tom alegre com emojis moderados, como instruído. \n\nImportante confirmar os dias e horários de funcionamento caso ele pergunte, mas por enquanto só apresentar o cardápio se ele pedir. A resposta precisa ser curta e amigável para não sobrecarregar.",
+      "timestamp": 1764805288491
+    },
+    {
+      "role": "user",
+      "content": "cardapio",
+      "timestamp": 1764805296947
+    },
+    {
+      "role": "assistant",
+      "content": "Aqui está nosso *cardápio completo* pra você escolher! 😋🍔  \n\n_🍔 HAMBÚRGUERES_  \n• Americano — R$ 23,00  \n• Bauru Muchulouco — R$ 22,00  \n• Da House — R$ 25,00  \n• Misto Quente — R$ 19,00  \n• X Salada — R$ 23,00  \n• X Salada Especial — R$ 24,00  \n• X-bacon — R$ 25,00  \n• X-bacon Especial — R$ 26,00  \n• X-burguer — R$ 21,00  \n• X-pitikão — R$ 28,00  \n• X-rango — R$ 27,00  \n• X-tudo — R$ 30,00  \n\n_🥩 LOMBOS_  \n• Crazy Pig — R$ 23,50  \n• Porquinho Pratico — R$ 21,50  \n• Ultimo Tango — R$ 23,00  \n• Valsa Do Adeus — R$ 23,50  \n\n_🍗 FRANGO_  \n• X-frango Especial — R$ 25,00  \n• X-salada Com Frango — R$ 23,00  \n\n_🥗 VEGETARIANO_  \n• Vegetariano — R$ 24,00  \n\n_🥤 BEBIDAS_  \n• Refrigerantes (Coca, Guaraná) — R$ 2,50 a R$ 12,00  \n• Cervejas (Heineken, Skol, etc) — R$ 5,00 a R$ 9,00  \n• Sucos e Cremes — R$ 10,00 a R$ 14,00  \n\n_🔸 ADICIONAIS_  \n• Cheddar — R$ 2,50  \n• Hambúrguer extra — R$ 4,00  \n\n*Lembrando:*  \n- Retirada: +R$ 0,50 por lanche (embalagem).  \n- Delivery: frete mínimo R$ 5,00 + R$ 0,50 por lanche.  \n\nProntinho! 😉 Me fala o que vai querer!",
+      "thought": "Ah, o cliente pediu o cardápio! Vou apresentar de forma organizada e atrativa, destacando as categorias principais com emojis para facilitar a leitura. Como estamos no WhatsApp, preciso evitar markdown complexo e usar apenas negritos, itálicos e formatação simples.\n\nPrimeiro, vou listar os hambúrgueres que são nosso carro-chefe, com preços claros. Depois as outras categorias: lombos suculentos, opções de frango, vegetariano, bebidas variadas e adicionais. \n\nPreciso lembrar de incluir todas as seções do cardápio real sem inventar nada - desde os clássicos como X-Tudo até os refrigerantes em diferentes tamanhos. As cervejas também são importantes, principalmente porque estamos no horário noturno.\n\nVou finalizar com uma pergunta direta sobre o pedido, mantendo o tom simpático e incentivador. Afinal, o objetivo é converter a consulta em venda! 😊\n\nAh, e não esquecer de mencionar discretamente o acréscimo por embalagem no caso de retirada, mas sem sobrecarregar a mensagem. Isso pode ficar para quando o cliente definir o tipo de entrega.",
+      "timestamp": 1764805329532
+    }
+  ],
+  "lastInteraction": 1764805329532
+}

@@ -1,0 +1,16 @@
+{
+  "id": "1765583786765",
+  "customerPhone": "556499335575@s.whatsapp.net",
+  "items": [
+    {
+      "name": "Bolaroid",
+      "quantity": 2,
+      "priceAtMoment": 8
+    }
+  ],
+  "total": 16,
+  "status": "pending",
+  "deliveryNeeded": true,
+  "address": "Rua José Clementino Borges, número 122, Margon 3",
+  "createdAt": "2025-12-12T23:56:26.765Z"
+}

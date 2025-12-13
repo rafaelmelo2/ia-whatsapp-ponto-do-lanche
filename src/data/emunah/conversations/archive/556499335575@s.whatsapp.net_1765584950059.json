@@ -1,0 +1,26 @@
+{
+  "phone": "556499335575@s.whatsapp.net",
+  "history": [
+    {
+      "role": "user",
+      "content": "Oi quero 3 bolaroids",
+      "timestamp": 1765584906017
+    },
+    {
+      "role": "assistant",
+      "content": "Ótima escolha! Cada Bolaroid custa R$ 8,00, então 3 unidades ficarão no total de R$ 24,00. 😊\n\nVocê gostaria de adicionar alguma personalização ou foto específica para os Bolaroids? Se sim, pode enviar as fotos aqui com as instruções. \n\nAlém disso, preciso confirmar:\n1. Seu nome completo.\n2. Se autoriza a postagem das fotos para outros conteúdos da loja.\n\nE também, o pedido será para retirada ou entrega? Caso seja entrega, preciso do endereço completo. \n\nAguardando sua resposta para prosseguirmos! ✨",
+      "timestamp": 1765584917011
+    },
+    {
+      "role": "user",
+      "content": "[IMAGEM_ENVIADA:3EB07877C1D897386A9FE2] [IMAGEM_ENVIADA:3EB06951404210D5D63C93] [imagem]\n[IMAGEM_ENVIADA:3EB028718DDD6E689BE6AE] [imagem]\n[IMAGEM_ENVIADA:3EB07877C1D897386A9FE2] [imagem]",
+      "timestamp": 1765584925051
+    },
+    {
+      "role": "assistant",
+      "content": "_ÓTIMO! RECEBI TODAS AS FOTOS PARA OS 3 BOLAROIDS:_  \n\n✅ Foto 1 → Salva para o 1º Bolaroid  \n✅ Foto 2 → Salva para o 2º Bolaroid  \n✅ Foto 3 → Salva para o 3º Bolaroid  \n\nAgora só preciso confirmar:  \n\n1. Seu *NOME COMPLETO* para o pedido.  \n2. Se *AUTORIZA* a gente usar essas fotos em nossas redes sociais e materiais de divulgação.  \n\nE por fim:  \n• Será *RETIRADA* na loja ou *ENTREGA*? (Se for entrega, preciso do endereço completo 🏡).  \n\nFaltam só esses detalhes para finalizar! 😊✨  \n\n(Obs.: O valor total continua R$ 24,00 + frete, se for delivery.)",
+      "timestamp": 1765584950059
+    }
+  ],
+  "lastInteraction": 1765584950059
+}

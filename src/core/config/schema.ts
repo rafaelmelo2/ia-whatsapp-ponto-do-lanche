@@ -3,10 +3,12 @@ import { z } from "zod";
 export const ConfigSchema = z.object({
   workflow: z
     .object({
-      type: z.enum(["commerce", "appointment"]).default("commerce")
+      type: z.enum(["commerce", "appointment", "auto"]).default("auto"),
+      // Permite habilitar features explicitamente se necessário
+      features: z.array(z.string()).optional()
     })
     .optional()
-    .default({ type: "commerce" }),
+    .default({ type: "auto" }),
   store: z.object({
     id: z.string(),
     name: z.string(),
@@ -61,9 +63,20 @@ export const ConfigSchema = z.object({
         .optional(),
       category_order: z.array(z.string()).optional()
     })
-    .refine((data) => data.api_url || data.json_path, {
-      message: "catalog deve ter 'api_url' OU 'json_path' definido (pelo menos um)"
+    .optional() // Catálogo agora é opcional (pode ser só agendamento)
+    .refine((data) => !data || data.api_url || data.json_path, {
+      message: "Se definido, catalog deve ter 'api_url' OU 'json_path'"
     }),
+  services: z
+    .array(
+      z.object({
+        name: z.string(),
+        description: z.string().optional(),
+        price: z.number().optional(),
+        duration_minutes: z.number().optional()
+      })
+    )
+    .optional(), // Lista de serviços para agendamento
   upsell: z.object({
     default_suggestions: z.array(z.string()),
     best_sellers_tag: z.string()

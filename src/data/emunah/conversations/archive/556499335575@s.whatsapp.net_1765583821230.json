@@ -1,0 +1,56 @@
+{
+  "phone": "556499335575@s.whatsapp.net",
+  "history": [
+    {
+      "role": "user",
+      "content": "Olá",
+      "timestamp": 1765583659612
+    },
+    {
+      "role": "user",
+      "content": "Quero duas bolaroids",
+      "timestamp": 1765583665416
+    },
+    {
+      "role": "assistant",
+      "content": "Oi! 😄 Seja bem-vindo(a) à *Loja de Artesanato Emunah*!  \n\nComo posso te ajudar hoje? Quer dar uma olhada no nosso catálogo, fazer um pedido ou saber mais sobre algum produto?  \n\nFico à disposição! ✨",
+      "timestamp": 1765583671807
+    },
+    {
+      "role": "assistant",
+      "content": "Oi! 😄 Seja bem-vindo(a) à *Loja de Artesanato Emunah*!\n\nVocê quer duas *Bolaroids*, certo? Cada uma custa R$ 8,00, então o total seria R$ 16,00. \n\nAgora, preciso que você envie as fotos para personalização. Por favor, me envie:\n\n📸 Foto → Essa será a primeira Bolaroid.  \n📸 Foto → Essa será a segunda Bolaroid.  \n\nAlém disso, preciso confirmar:  \n• Seu nome completo.  \n• Se você autoriza a postagem das fotos para outros conteúdos.  \n\nE por fim, me avise se vai retirar na loja ou precisa de entrega! 😊",
+      "timestamp": 1765583678738
+    },
+    {
+      "role": "user",
+      "content": "[IMAGEM_ENVIADA:3EB03A4991EFD344B43658] 1 bolaroid",
+      "timestamp": 1765583706031
+    },
+    {
+      "role": "user",
+      "content": "[IMAGEM_ENVIADA:3EB0B725E8616061938129] 2 bolaroid",
+      "timestamp": 1765583706081
+    },
+    {
+      "role": "assistant",
+      "content": "Ótimo! Recebi as fotos para as duas Bolaroids. Agora só preciso de mais alguns detalhes para finalizar seu pedido:\n\n📝 *DADOS PARA O PEDIDO*  \n• Qual seu *nome completo*?  \n• Autoriza a postagem das fotos para outros conteúdos da loja? (Sim/Não)  \n• Vai *retirar na loja* ou prefere *entrega*?  \n\n(Se for entrega, preciso confirmar o endereço e o frete mínimo é R$ 8,00)  \n\nAs Bolaroids ficaram no valor total de *R$ 16,00* + frete (se for delivery).  \n\nMe avise quando puder responder essas informações! 😊",
+      "timestamp": 1765583722239
+    },
+    {
+      "role": "assistant",
+      "content": "_ÓTIMO! FOTOS RECEBIDAS:_  \n\n📸 Foto 1 → Salva para a *1ª Bolaroid*  \n📸 Foto 2 → Salva para a *2ª Bolaroid*  \n\nAgora só preciso fechar os detalhes:  \n\n1. Seu *nome completo* por favor.  \n2. Você *autoriza* a gente a usar essas fotos em posts e redes sociais? (Sim/Não)  \n3. Vai ser *retirada na loja* ou *entrega*?  \n\n👉 *Lembrando:*  \n• Valor total: R$ 16,00 (+ frete se for delivery).  \n• Pagamento via PIX ou cartão.  \n\nMe avise quando puder! 😊",
+      "timestamp": 1765583722430
+    },
+    {
+      "role": "user",
+      "content": "Rafael Melo\nAutorizo\nQuero que entregue na Rua josé clementino borges numero 122, margon 3",
+      "timestamp": 1765583777953
+    },
+    {
+      "role": "assistant",
+      "content": "Ótimo, Rafael! Vamos fechar seu pedido:  \n\n*📝 RESUMO DO PEDIDO*  \n• 2 Bolaroids → R$ 16,00  \n• Entrega: Rua José Clementino Borges, nº 122, Margon 3  \n• Frete: R$ 8,00  \n• *Total: R$ 24,00*  \n\n*📋 DADOS CONFIRMADOS*  \n✔️ Nome: Rafael Melo  \n✔️ Autorização para uso das fotos: **SIM**  \n\n*💳 FORMAS DE PAGAMENTO*  \n• PIX (chave: lojaemunah@artesanato.com)  \n• Cartão (enviaremos link seguro)  \n\n*⏳ PRAZO DE ENTREGA*  \nSeu pedido ficará pronto em **3 a 7 dias úteis** (te avisaremos quando estiver a caminho!).  \n\nQuer fechar no PIX ou cartão? 😊  \n\n(Assim que o pagamento for confirmado, já começamos a produção!)",
+      "timestamp": 1765583821230
+    }
+  ],
+  "lastInteraction": 1765583821230
+}

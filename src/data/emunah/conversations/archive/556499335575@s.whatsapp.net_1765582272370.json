@@ -1,0 +1,26 @@
+{
+  "phone": "556499335575@s.whatsapp.net",
+  "history": [
+    {
+      "role": "user",
+      "content": "oi quero uma polaroid mini",
+      "timestamp": 1765582248320
+    },
+    {
+      "role": "assistant",
+      "content": "Ótima escolha! A _Polaroid Mini_ custa R$ 12,00. 😊  \n\nVocê quer personalizar com alguma foto? Se sim, pode me enviar a imagem com a legenda:  \n`📸 Foto → Essa será a Polaroid Mini`.  \n\nTambém preciso do seu **nome completo** e se **autoriza a postagem da foto** para outros conteúdos da loja.  \n\nVamos fechar o pedido? Ou quer adicionar mais itens?",
+      "timestamp": 1765582255764
+    },
+    {
+      "role": "user",
+      "content": "[IMAGEM_ENVIADA:3EB0DC1A54EE698B724376] [imagem]",
+      "timestamp": 1765582262488
+    },
+    {
+      "role": "assistant",
+      "content": "Perfeito! Recebi sua foto. Agora preciso de mais algumas informações para finalizar seu pedido.",
+      "timestamp": 1765582272370
+    }
+  ],
+  "lastInteraction": 1765582272370
+}

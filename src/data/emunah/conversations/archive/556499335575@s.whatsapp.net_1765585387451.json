@@ -1,0 +1,46 @@
+{
+  "phone": "556499335575@s.whatsapp.net",
+  "history": [
+    {
+      "role": "user",
+      "content": "Oi quero 3 bolaroids",
+      "timestamp": 1765585256431
+    },
+    {
+      "role": "assistant",
+      "content": "Ótima escolha! 😊 Cada *Bolaroid* custa R$ 8,00. Portanto, 3 unidades ficam no total de *R$ 24,00*. \n\nVocê gostaria de personalizar alguma coisa nelas? Se sim, pode enviar as fotos e os detalhes da personalização. \n\nAlém disso, me informe:\n1. Seu nome completo.\n2. Se você autoriza a postagem das fotos para outros conteúdos da loja. \n\nE também:\n- O pedido será para retirada ou entrega? Se for entrega, preciso do endereço completo. \n\nAguardarei sua resposta para prosseguirmos! 😊",
+      "timestamp": 1765585270736
+    },
+    {
+      "role": "user",
+      "content": "[IMAGEM_ENVIADA:3EB0174D99228C5206DA46] [IMAGEM_ENVIADA:3EB0C5E3E2583DB87382B3] [imagem]\n[IMAGEM_ENVIADA:3EB03EDB66385110C001A1] [imagem]\n[IMAGEM_ENVIADA:3EB0174D99228C5206DA46] [imagem]",
+      "timestamp": 1765585280454
+    },
+    {
+      "role": "assistant",
+      "content": "_ÓTIMO! RECEBI TODAS AS FOTOS PARA AS 3 BOLAROIDS:_  \n\n✅ Foto 1 → Salva para o 1º Bolaroid  \n✅ Foto 2 → Salva para o 2º Bolaroid  \n✅ Foto 3 → Salva para o 3º Bolaroid  \n\nAgora só preciso de mais alguns detalhes para finalizar:  \n\n1. 📝 *NOME COMPLETO* para o pedido.  \n2. ✅ *AUTORIZAÇÃO* para usar essas fotos em conteúdos da loja? (Sim/Não).  \n3. 🚚 *RETIRADA OU ENTREGA*?  \n   - Se for entrega, preciso do endereço completo + complemento.  \n\n*VALOR TOTAL:* R$ 24,00 (3 Bolaroids) + frete (se for delivery).  \n\nPode me confirmar esses dados? 😊",
+      "timestamp": 1765585318069
+    },
+    {
+      "role": "user",
+      "content": "Perfeito\nRafael da Silva Melo\nVou retirar",
+      "timestamp": 1765585333650
+    },
+    {
+      "role": "assistant",
+      "content": "Ótimo, Rafael! 😊 Vou finalizar seu pedido agora mesmo.  \n\n_📝 RESUMO DO PEDIDO:_  \n• 3x Bolaroid — R$ 24,00  \n• Retirada na loja  \n\n*TOTAL: R$ 24,00*  \n\nPor favor, aguarde um momento enquanto registro tudo...  \n\n🌀",
+      "timestamp": 1765585343452
+    },
+    {
+      "role": "user",
+      "content": "Obrigado",
+      "timestamp": 1765585379570
+    },
+    {
+      "role": "assistant",
+      "content": "Você é muito bem-vindo, Rafael! 😊 Foi um prazer te ajudar!  \n\nSe precisar de mais alguma coisa ou quiser fazer outro pedido, é só chamar. Sua satisfação é nossa prioridade!  \n\nTenha um ótimo dia e até a próxima! 🌟  \n\n_*Loja de Artesanato Emunah*_  ",
+      "timestamp": 1765585387451
+    }
+  ],
+  "lastInteraction": 1765585387451
+}

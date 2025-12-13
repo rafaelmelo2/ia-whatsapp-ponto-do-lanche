@@ -1,0 +1,21 @@
+{
+  "id": "1765418198823",
+  "customerPhone": "556499335575@s.whatsapp.net",
+  "items": [
+    {
+      "name": "X-tudo",
+      "quantity": 1,
+      "observation": ""
+    },
+    {
+      "name": "Coca Cola 2l Zero",
+      "quantity": 1,
+      "observation": ""
+    }
+  ],
+  "total": 30,
+  "status": "pending",
+  "deliveryNeeded": false,
+  "paymentMethod": "Cartão de Crédito/Débito",
+  "createdAt": "2025-12-11T01:56:38.824Z"
+}

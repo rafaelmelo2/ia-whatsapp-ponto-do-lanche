@@ -1,0 +1,16 @@
+{
+  "id": "1765583314077",
+  "customerPhone": "556499335575@s.whatsapp.net",
+  "items": [
+    {
+      "name": "Polaroid Mini",
+      "quantity": 1,
+      "priceAtMoment": 12
+    }
+  ],
+  "total": 12,
+  "status": "pending",
+  "deliveryNeeded": false,
+  "paymentMethod": "Cartão de Crédito/Débito",
+  "createdAt": "2025-12-12T23:48:34.077Z"
+}

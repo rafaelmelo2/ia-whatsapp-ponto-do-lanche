@@ -113,7 +113,12 @@ export class ConversationManager {
     thought?: string
   ): Promise<ConversationState> {
     const state = await this.get(phone);
-    state.history.push({ role, content, thought, timestamp: Date.now() });
+    state.history.push({ 
+      role, 
+      content, 
+      thought: thought || undefined, 
+      timestamp: Date.now() 
+    });
     await this.save(state);
     return state;
   }

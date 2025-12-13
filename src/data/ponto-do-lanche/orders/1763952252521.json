@@ -1,0 +1,18 @@
+{
+  "id": "1763952252521",
+  "customerPhone": "556499335575@s.whatsapp.net",
+  "items": [
+    {
+      "name": "X-tudo",
+      "quantity": 1
+    },
+    {
+      "name": "Coca Cola 310ml",
+      "quantity": 1
+    }
+  ],
+  "total": 35,
+  "status": "pending",
+  "deliveryNeeded": false,
+  "createdAt": "2025-11-24T02:44:12.521Z"
+}

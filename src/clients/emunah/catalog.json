@@ -1,0 +1,380 @@
+[
+  {
+    "nome": "Kit 10 Esferas Natalinas",
+    "descricao": "Esfera de acrílico transparente, com decoração natalina personalizada",
+    "preco": 90.0,
+    "preco_original": 120.0
+  },
+  {
+    "nome": "Foto 10x15",
+    "descricao": "2 unidades",
+    "preco": 10.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Chaveiro Singular com Tassel",
+    "descricao": "Chaveiro personalizado com tassel decorativo",
+    "preco": 20.0,
+    "categoria": "Chaveiros"
+  },
+  {
+    "nome": "Chaveiro Singular",
+    "descricao": "Chaveiro personalizado",
+    "preco": 18.0,
+    "categoria": "Chaveiros"
+  },
+  {
+    "nome": "Álbum Paixão",
+    "descricao": null,
+    "preco": 55.0,
+    "categoria": "Álbuns e Livros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Love Goods",
+    "descricao": "Livro personalizado com fotos e mensagens",
+    "preco": 85.0,
+    "categoria": "Álbuns e Livros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Kit Love Goods",
+    "descricao": "1 Livro personalizado com fotos e mensagens",
+    "preco": 170.0,
+    "categoria": "Álbuns e Livros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Quadro Netflix",
+    "descricao": "Moldura branca, preta ou marrom",
+    "preco": 80.0,
+    "categoria": "Quadros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Quadro Google",
+    "descricao": "Moldura branca, preta ou marrom",
+    "preco": 80.0,
+    "categoria": "Quadros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Quadro Sinônimos",
+    "descricao": "Moldura branca, preta ou marrom",
+    "preco": 80.0,
+    "categoria": "Quadros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "50 Motivos Para Te Amar",
+    "descricao": null,
+    "preco": 40.0,
+    "categoria": "Álbuns e Livros"
+  },
+  {
+    "nome": "Potinho do Amor",
+    "descricao": null,
+    "preco": 35.0,
+    "categoria": "Acessórios e Presentes"
+  },
+  {
+    "nome": "Monóculo",
+    "descricao": "Monóculo branco com detalhe decorativo",
+    "preco": 25.0,
+    "categoria": "Acessórios e Presentes"
+  },
+  {
+    "nome": "Garrafa led",
+    "descricao": null,
+    "preco": 62.0,
+    "categoria": "Acessórios e Presentes"
+  },
+  {
+    "nome": "Embalagem Presente",
+    "descricao": "Caixinha reutilizável + Papel seda decorativo",
+    "preco": 15.0,
+    "categoria": "Acessórios e Presentes"
+  },
+  {
+    "nome": "Calendário Magnético",
+    "descricao": "Calendário de 2025 com fotos reveladas",
+    "preco": 75.0,
+    "categoria": "Acessórios e Presentes",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Polaroid Árvore",
+    "descricao": "Kit de decoração para taças, composto por polaroids natalinas",
+    "preco": 6.0,
+    "categoria": "Decoração Natalina"
+  },
+  {
+    "nome": "Polaroid Natalina",
+    "descricao": "Disponíveis em várias estampas e modelos natalinos",
+    "preco": 4.0,
+    "categoria": "Decoração Natalina"
+  },
+  {
+    "nome": "Bolaroid",
+    "descricao": "Esfera de acrílico com Polaroid Mini personalizado",
+    "preco": 8.0,
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Kit 5 Esferas Natalinas",
+    "descricao": "Esfera de acrílico transparente, com decoração natalina personalizada",
+    "preco": 50.0,
+    "preco_original": 60.0,
+    "categoria": "Decoração Natalina"
+  },
+  {
+    "nome": "Esfera Natalina",
+    "descricao": "Esfera de acrílico transparente, com decoração natalina personalizada",
+    "preco": 12.0,
+    "categoria": "Decoração Natalina"
+  },
+  {
+    "nome": "Polaroid Mini",
+    "descricao": "4 unidades",
+    "preco": 12.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Polaroid Grande",
+    "descricao": null,
+    "preco": 16.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Nosso Quadro",
+    "descricao": "Informações nas imagens",
+    "preco": 80.0,
+    "categoria": "Quadros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Quadro Led",
+    "descricao": "Com 9 fotos: R$110,00",
+    "preco": 100.0,
+    "categoria": "Quadros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Kit Chaveiro",
+    "descricao": "Informações nas imagens",
+    "preco": 40.0,
+    "categoria": "Chaveiros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Mini Box Nossos Momentos",
+    "descricao": "Informações nas imagens",
+    "preco": 75.0,
+    "categoria": "Álbuns e Livros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Chaveiro Com Tassel",
+    "descricao": null,
+    "preco": 18.0,
+    "categoria": "Chaveiros"
+  },
+  {
+    "nome": "Adicional Spotify Code",
+    "descricao": null,
+    "preco": 1.0
+  },
+  {
+    "nome": "Adicional de Legenda",
+    "descricao": null,
+    "preco": 0.5
+  },
+  {
+    "nome": "Instax Color",
+    "descricao": "4 unidades",
+    "preco": 16.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Polaroid Mini Color",
+    "descricao": "4 unidades",
+    "preco": 12.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Polaroid Color",
+    "descricao": "4 unidades",
+    "preco": 16.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Quadradinho com ímã",
+    "descricao": "4 unidades",
+    "preco": 24.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Vertical com ímã",
+    "descricao": "4 unidades",
+    "preco": 32.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Retangular com ímã",
+    "descricao": "4 unidades",
+    "preco": 24.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Instax com ímã",
+    "descricao": "4 unidades",
+    "preco": 24.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Polaroid Mini com ímã",
+    "descricao": null,
+    "preco": 18.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Polaroid com ímã",
+    "descricao": "4 unidades",
+    "preco": 24.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Quadradinho Mini",
+    "descricao": null,
+    "preco": 12.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Quadradinho",
+    "descricao": "4 unidades",
+    "preco": 14.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Vertical",
+    "descricao": "4 unidades",
+    "preco": 14.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Retangular",
+    "descricao": "4 unidades",
+    "preco": 14.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Kit Álbum",
+    "descricao": null,
+    "preco": 52.0,
+    "categoria": "Álbuns e Livros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Chaveiro Coração com Tassel",
+    "descricao": null,
+    "preco": 20.0,
+    "categoria": "Chaveiros"
+  },
+  {
+    "nome": "Chaveiro Coração",
+    "descricao": null,
+    "preco": 18.0,
+    "categoria": "Chaveiros"
+  },
+  {
+    "nome": "Quadro Amor",
+    "descricao": null,
+    "preco": 80.0,
+    "categoria": "Quadros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Quadro Dois vidros",
+    "descricao": null,
+    "preco": 48.0,
+    "categoria": "Quadros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Quadro spotify",
+    "descricao": null,
+    "preco": 48.0,
+    "categoria": "Quadros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Álbum",
+    "descricao": null,
+    "preco": 20.0,
+    "categoria": "Álbuns e Livros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Marca página",
+    "descricao": null,
+    "preco": 5.0,
+    "categoria": "Acessórios e Presentes"
+  },
+  {
+    "nome": "Polaroid de mesa",
+    "descricao": null,
+    "preco": 35.0,
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Bloquinho",
+    "descricao": null,
+    "preco": 45.0,
+    "categoria": "Acessórios e Presentes"
+  },
+  {
+    "nome": "Kit Declaração",
+    "descricao": null,
+    "preco": 70.0,
+    "categoria": "Álbuns e Livros",
+    "requisicao_fotos": true
+  },
+  {
+    "nome": "Polaroid",
+    "descricao": "4 unidades",
+    "preco": 14.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Tirinha",
+    "descricao": "2 unidades",
+    "preco": 8.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Instax",
+    "descricao": "4 unidades",
+    "preco": 14.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Horizontal",
+    "descricao": "4 unidades",
+    "preco": 14.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Horizontal Mini",
+    "descricao": null,
+    "preco": 12.0,
+    "categoria": "Polaroids e Fotos"
+  },
+  {
+    "nome": "Chaveiro Simples",
+    "descricao": "Tamanho 3x4cm",
+    "preco": 15.0,
+    "categoria": "Chaveiros"
+  }
+]

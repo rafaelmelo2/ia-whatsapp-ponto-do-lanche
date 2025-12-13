@@ -1,0 +1,46 @@
+{
+  "phone": "556499335575@s.whatsapp.net",
+  "history": [
+    {
+      "role": "user",
+      "content": "quero uma polaroid mini",
+      "timestamp": 1765583232044
+    },
+    {
+      "role": "assistant",
+      "content": "Ótima escolha! A *Polaroid Mini* é um item incrível e custa R$ 12,00. 😊  \n\nVocê gostaria de personalizá-la com alguma foto? Se sim, por favor, envie a imagem com a legenda:  \n`📸 Foto → Essa será a Polaroid Mini`.  \n\nAlém disso, preciso confirmar:  \n1. Seu nome completo.  \n2. Se autoriza a postagem das fotos para outros conteúdos da loja.  \n\nAguardo seu retorno!",
+      "timestamp": 1765583243130
+    },
+    {
+      "role": "user",
+      "content": "[IMAGEM_ENVIADA:3EB0E796B85664F2B25D47] [imagem]",
+      "timestamp": 1765583247288
+    },
+    {
+      "role": "assistant",
+      "content": "✅ _Foto recebida e salva para o item *Polaroid Mini*!_ 😊  \n\nAgora só preciso de mais dois detalhes:  \n\n1. 📝 *Nome completo* (para confecção e entrega).  \n2. ✅ *Autoriza a postagem dessa foto* em nossos conteúdos? (Sim/Não).  \n\nE já vou preparando seu pedido! 💛  \n\n(Obs.: O valor total é R$ 12,00 + frete a confirmar. Caso queira adicionar mais itens, é só me avisar!)",
+      "timestamp": 1765583268608
+    },
+    {
+      "role": "user",
+      "content": "Rafael da Silva Melo\nAutorizo postagem",
+      "timestamp": 1765583281376
+    },
+    {
+      "role": "assistant",
+      "content": "Ótimo, Rafael! Agradeço pela confiança e pela autorização. 😊  \n\nSeu pedido está quase finalizado:  \n- *Polaroid Mini* → R$ 12,00  \n- Frete → A partir de R$ 8,00 (vou confirmar o valor exato no fechamento).  \n\nPor favor, me confirme:  \n1. Você prefere *retirar na loja* ou *entrega*?  \n2. Se for entrega, qual o *endereço completo*?  \n3. Forma de pagamento: *Pix* ou *Cartão*?  \n\nAssim que responder, fechamos seu pedido! 💛",
+      "timestamp": 1765583295176
+    },
+    {
+      "role": "user",
+      "content": "Quero retirar na loja, pago na hora com cartão",
+      "timestamp": 1765583310184
+    },
+    {
+      "role": "assistant",
+      "content": "            Perfeito, Rafael! 💛  \n\nSeu pedido foi registrado assim:  \n• *Polaroid Mini* → R$ 12,00 (sua foto já está anexada).  \n• *Retirada na loja* → Sem custo adicional.  \n• *Pagamento*: Cartão no local.  \n\n📅 *Prazo para retirada*: Entre 3 a 14 dias úteis (te avisaremos por aqui quando estiver pronto!).  \n\n_LOJA EMUNAH_  \n📍 Endereço: [inserir endereço da loja aqui]  \n⏰ Horário: Segunda a Sábado, das 9h às 18h.  \n\nQualquer dúvida, é só chamar! Obrigado pela preferência. 😊✨  \n\n(Se quiser adicionar mais itens, avise!)",
+      "timestamp": 1765583340969
+    }
+  ],
+  "lastInteraction": 1765583340969
+}

@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { loadConfig } from "./core/config/loadConfig.js";
 import { PromptGuard } from "./core/llm/guard.js";
-import { LLMModel } from "./core/llm/model.js";
+import { LangchainModel } from "./core/llm/langchainModel.js";
 import { PromptBuilder } from "./core/llm/promptBuilder.js";
 import { MenuService } from "./core/menu/menuService.js";
 import { ConversationManager } from "./core/orders/orderState.js";
@@ -9,6 +9,7 @@ import { createClientLogger } from "./core/utils/logger.js";
 import { BaileysProvider } from "./core/whatsapp/baileys.js";
 import { GroupCommandManager } from "./core/whatsapp/groupCommandManager.js";
 import { WorkflowContext } from "./core/workflows/base/types.js";
+import { WorkflowAgent } from "./core/workflows/base/workflowAgent.js";
 import { getWorkflowHandler } from "./core/workflows/factory.js";
 import { startServer } from "./server.js";
 
@@ -33,25 +34,33 @@ async function main() {
 
     // Criar logger específico do cliente
     const clientLogger = createClientLogger(CLIENT_ID);
-    clientLogger.info(`Iniciando bot para cliente: ${CLIENT_ID}`);
 
     // 1. Config
     const config = loadConfig(CLIENT_ID);
 
+    // 1. Config logger
+    clientLogger.info(`=${"=".repeat(50)}`);
+    clientLogger.info(` ✨ Iniciando bot para cliente: ${CLIENT_ID} MODEL: ${process.env.LLM_MODEL_OVERRIDE || config.llm.model}`);
+    clientLogger.info(`=${"=".repeat(50)}`);
+
     // 2. Services (todos recebem clientId agora)
     const menuService = new MenuService(config, CLIENT_ID);
     const promptBuilder = new PromptBuilder();
-    const llm = new LLMModel(config);
+    const llm = new LangchainModel(config);
     const guard = new PromptGuard();
     const conversationManager = new ConversationManager(CLIENT_ID);
     const whatsapp = new BaileysProvider(CLIENT_ID);
 
-    // Workflow Handler Factory
-    const workflowHandler = getWorkflowHandler(config);
+    // Workflow Handler Factory (usa o modelo Langchain)
+    const workflowHandler = getWorkflowHandler(config, CLIENT_ID, llm.getModel());
     clientLogger.info(`Workflow ativo: ${config.workflow?.type || "commerce"}`);
 
+    // Cria o agente com ferramentas do workflow
+    let workflowAgent: WorkflowAgent | null = null;
+
     // 2.5. Configurar sistema de comandos de grupo
-    const commandGroupId = process.env[getEnvVarName("COMMAND_GROUP_ID", CLIENT_ID)] || null;
+    // Ajustado para COMMANDS (plural) conforme docker-compose
+    const commandGroupId = process.env[getEnvVarName("COMMANDS_GROUP_ID", CLIENT_ID)] || null;
     const adminPhonesStr = process.env[getEnvVarName("ADMIN_PHONES", CLIENT_ID)] || "";
     const adminPhones = adminPhonesStr
       .split(",")
@@ -64,7 +73,7 @@ async function main() {
       clientLogger.info(`Grupo de comandos configurado: ${commandGroupId}`);
       clientLogger.info(`Admins autorizados: ${adminPhones.length} número(s)`);
     } else {
-      clientLogger.warn(`Grupo de comandos não configurado (${getEnvVarName("COMMAND_GROUP_ID", CLIENT_ID)})`);
+      clientLogger.warn(`Grupo de comandos não configurado (${getEnvVarName("COMMANDS_GROUP_ID", CLIENT_ID)})`);
     }
 
     // 2.6. Handler para comandos de grupo
@@ -97,8 +106,9 @@ async function main() {
         case "pause":
           if (command.targetPhone) {
             commandManager.pauseNumber(command.targetPhone);
-            response = `⏸️ Bot pausado para ${command.targetPhone.split("@")[0]
-              }. Agora você pode assumir o atendimento manualmente.`;
+            response = `⏸️ Bot pausado para ${
+              command.targetPhone.split("@")[0]
+            }. Agora você pode assumir o atendimento manualmente.`;
           } else {
             response = `❌ Por favor, informe o número: /stop <número> ou /<número>`;
           }
@@ -138,15 +148,27 @@ async function main() {
         return; // Não responde automaticamente
       }
 
-      clientLogger.info(`Msg de ${msg.from}: ${msg.body}`);
+      // Log da mensagem (incluindo informação de imagem)
+      if (msg.hasImage) {
+        clientLogger.info(`Msg de ${msg.from}: [IMAGEM] ${msg.body || "(sem legenda)"} - ID: ${msg.imageMessageId}`);
+      } else {
+        clientLogger.info(`Msg de ${msg.from}: ${msg.body}`);
+      }
 
       // Marca mensagem como lida (azul)
       if (msg.messageId) {
         await whatsapp.markAsRead(msg.from, msg.messageId);
       }
 
+      // Prepara o body da mensagem para incluir informação de imagem
+      let messageBody = msg.body;
+      if (msg.hasImage && msg.imageMessageId) {
+        // Adiciona informação sobre a imagem no body para o agente processar
+        messageBody = `[IMAGEM_ENVIADA:${msg.imageMessageId}] ${msg.body || "Cliente enviou uma foto"}`;
+      }
+
       // Validação da mensagem do usuário ANTES de processar (bloqueia prompt injection)
-      const userValidation = guard.validateUserMessage(msg.body);
+      const userValidation = guard.validateUserMessage(messageBody);
       if (!userValidation.isValid) {
         clientLogger.warn(`Guard: Bloqueou mensagem do usuário: ${userValidation.reason}`);
         await whatsapp.sendText(msg.from, "Desculpe, não posso processar essa mensagem. Como posso ajudar com seu pedido? 😊");
@@ -158,77 +180,84 @@ async function main() {
 
       try {
         // A. Carrega estado e Menu
-        const state = await conversationManager.addMessage(msg.from, "user", msg.body);
+        const state = await conversationManager.addMessage(msg.from, "user", messageBody);
         const menu = await menuService.getMenu();
 
-        // B. Monta Prompt
-        // Injetamos histórico recente
+        // B. Monta Prompt base (sem instruções JSON, pois usamos ferramentas agora)
+        const systemPrompt = promptBuilder.build(config, menu.rendered, "");
+
+        // C. Cria ou reutiliza o agente com ferramentas
+        // Prepara mapa de mensagens raw adicionais se houver agrupamento
+        const additionalRawMessages: Record<string, any> = {};
+        if (msg.mergedMessages) {
+          msg.mergedMessages.forEach((m) => {
+            if (m.imageMessageId && m.rawMessage) {
+              additionalRawMessages[m.imageMessageId] = m.rawMessage;
+            }
+          });
+        }
+
+        // Atualiza o contexto com a mensagem atual para passar rawMessage para tools
+        const workflowContext: WorkflowContext = {
+          clientId: CLIENT_ID,
+          phone: msg.from,
+          config,
+          logger: clientLogger,
+          whatsapp,
+          currentMessage: msg.rawMessage, // Passa mensagem raw principal
+          additionalRawMessages // Passa mapa de rawMessages adicionais
+        };
+
+        // Sempre recria as tools para ter o contexto atualizado (especialmente currentMessage)
+        const workflowTools = workflowHandler.getTools(workflowContext);
+        const langchainTools = workflowTools.getTools();
+
+        if (!workflowAgent) {
+          workflowAgent = new WorkflowAgent(config, llm.getModel(), langchainTools, systemPrompt);
+          clientLogger.info(`Agente criado com ${langchainTools.length} ferramentas`);
+        } else {
+          // Atualiza as tools do agente com o novo contexto
+          workflowAgent = new WorkflowAgent(config, llm.getModel(), langchainTools, systemPrompt);
+          clientLogger.debug(`Agente atualizado com ${langchainTools.length} ferramentas (contexto atualizado)`);
+        }
+
+        // D. Gera Resposta usando o Agente (que decide quando usar ferramentas)
+        clientLogger.info(`Gerando resposta com agente Langchain...`);
         const history = state.history.map((m) => ({ role: m.role, content: m.content }));
 
-        // Obtém instruções JSON dinâmicas do workflow
-        const jsonInstructions = workflowHandler.getPromptSnippet(config, menu.rendered);
-        const systemPrompt = promptBuilder.build(config, menu.rendered, jsonInstructions);
+        // Recebe objeto { content, thought }
+        const agentResponse = await workflowAgent.invoke(messageBody, history);
+        const answer = agentResponse.content;
+        const thought = agentResponse.thought;
 
-        // C. Gera Resposta LLM
-        clientLogger.info(`Gerando resposta LLM...`);
-        const llmResponse = await llm.generate(systemPrompt, history);
-        let answer = llmResponse.content;
-
-        // D. Validação da Resposta do LLM (Guard)
+        // E. Validação da Resposta do LLM (Guard)
         const validation = guard.validateLLMResponse(answer);
         if (!validation.isValid) {
           clientLogger.warn(`Resposta inválida do LLM: ${validation.reason}`);
 
           // Tenta corrigir problemas de formatação simples
           if (validation.reason?.includes("headers Markdown")) {
-            answer = answer.replace(/^#+\s/gm, "* "); // Remove headers markdown
+            const corrected = answer.replace(/^#+\s/gm, "* ");
             clientLogger.info("Guard: Tentou corrigir headers Markdown automaticamente");
+            await whatsapp.stopTyping(msg.from);
+            await whatsapp.sendText(msg.from, corrected);
+            await conversationManager.addMessage(msg.from, "assistant", corrected);
+            return;
           } else {
-            // Para outros problemas (JSON quebrado, muito longo, etc), não envia a resposta
+            // Para outros problemas, não envia a resposta
             await whatsapp.stopTyping(msg.from);
             await whatsapp.sendText(msg.from, "Desculpe, tive um problema ao processar sua mensagem. Pode repetir, por favor? 😊");
-            return; // Não envia resposta inválida
+            return;
           }
         }
 
-        // E. Processamento de Workflow (Extração e Ação)
-        // Monta contexto para o workflow
-        const workflowContext: WorkflowContext = {
-          clientId: CLIENT_ID,
-          phone: msg.from,
-          config,
-          logger: clientLogger,
-          whatsapp
-        };
-
-        const result = await workflowHandler.processResponse(answer, workflowContext);
-        let finalMessage = result.cleanedResponse;
-
-        if (result.actionNeeded && result.data) {
-          clientLogger.info("Ação de workflow detectada!", result.data);
-
-          try {
-            // Executa ação (salvar, notificar, etc)
-            await workflowHandler.executeAction(result.data, workflowContext);
-
-            // Se a mensagem final estiver vazia, gera um fallback genérico
-            if (!finalMessage.trim()) {
-              finalMessage = "✅ Tudo certo! Já registrei aqui. Qualquer dúvida é só chamar!";
-            }
-          } catch (actionError) {
-            clientLogger.error("Erro ao executar ação do workflow", actionError);
-            finalMessage = "Desculpe, tive um erro ao salvar seu registro. Pode tentar novamente?";
-          }
-        }
-
-        // G. Envia Resposta
-        if (finalMessage.trim()) {
-          // Para de mostrar "digitando..." antes de enviar
+        // F. Envia Resposta
+        if (answer.trim()) {
           await whatsapp.stopTyping(msg.from);
+          await whatsapp.sendText(msg.from, answer);
 
-          // sendText já tem delay aleatório embutido
-          await whatsapp.sendText(msg.from, finalMessage);
-          await conversationManager.addMessage(msg.from, "assistant", finalMessage, llmResponse.thought);
+          // Salva com o thought separado
+          await conversationManager.addMessage(msg.from, "assistant", answer, thought);
         } else {
           await whatsapp.stopTyping(msg.from);
         }
