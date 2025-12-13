@@ -7,9 +7,14 @@
   },
   {
     "nome": "Foto 10x15",
-    "descricao": "2 unidades",
+    "descricao": "Foto Revelada 10x15 cm",
     "preco": 10.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true,
+    "quantidade_minima": 2,
+    "aceita_legenda": false,
+    "tamanho": "10x15 cm",
+    "observacoes": "Pedido mínimo de 2 fotos. O cliente deve enviar duas fotos ou mais conforme a quantidade desejada, sempre todas juntas. Este modelo não aceita legenda, texto ou frase."
   },
   {
     "nome": "Chaveiro Singular com Tassel",
@@ -25,7 +30,6 @@
   },
   {
     "nome": "Álbum Paixão",
-    "descricao": null,
     "preco": 55.0,
     "categoria": "Álbuns e Livros",
     "requisicao_fotos": true
@@ -67,13 +71,11 @@
   },
   {
     "nome": "50 Motivos Para Te Amar",
-    "descricao": null,
     "preco": 40.0,
     "categoria": "Álbuns e Livros"
   },
   {
     "nome": "Potinho do Amor",
-    "descricao": null,
     "preco": 35.0,
     "categoria": "Acessórios e Presentes"
   },
@@ -85,7 +87,6 @@
   },
   {
     "nome": "Garrafa led",
-    "descricao": null,
     "preco": 62.0,
     "categoria": "Acessórios e Presentes"
   },
@@ -136,15 +137,28 @@
   },
   {
     "nome": "Polaroid Mini",
-    "descricao": "4 unidades",
+    "descricao": "Foto Polaroid Mini",
     "preco": 12.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true,
+    "quantidade_minima": 4,
+    "preco_adicional": 3.0,
+    "aceita_legenda": true,
+    "preco_legenda": 0.5,
+    "observacoes": "Valor referente ao pedido mínimo de 4 fotos. Cada foto adicional custa R$ 3,00. O cliente deve enviar no mínimo 4 fotos, podendo acrescentar mais, sempre enviando todas juntas. Este modelo aceita legenda pequena, com adicional de R$ 0,50 por foto."
   },
   {
     "nome": "Polaroid Grande",
-    "descricao": null,
+    "descricao": "Foto Polaroid Grande (7 x 8,5 cm)",
     "preco": 16.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true,
+    "quantidade_minima": 4,
+    "preco_adicional": 4.0,
+    "aceita_legenda": true,
+    "preco_legenda": 0.5,
+    "tamanho": "7 x 8,5 cm",
+    "observacoes": "Valor referente ao pedido mínimo de 4 fotos. Cada foto adicional custa R$ 4,00. O cliente deve enviar no mínimo 4 fotos, podendo acrescentar mais, sempre enviando todas juntas. Este modelo aceita legenda, com adicional de R$ 0,50 por foto."
   },
   {
     "nome": "Nosso Quadro",
@@ -176,200 +190,266 @@
   },
   {
     "nome": "Chaveiro Com Tassel",
-    "descricao": null,
     "preco": 18.0,
     "categoria": "Chaveiros"
   },
   {
     "nome": "Adicional Spotify Code",
-    "descricao": null,
     "preco": 1.0
   },
   {
     "nome": "Adicional de Legenda",
-    "descricao": null,
     "preco": 0.5
   },
   {
     "nome": "Instax Color",
-    "descricao": "4 unidades",
+    "descricao": "Foto instax com bordas coloridas, na cor escolhida pelo cliente",
     "preco": 16.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true,
+    "quantidade_minima": 2,
+    "preco_adicional": 4.0,
+    "aceita_legenda": false,
+    "tamanho": "8,3 x 5,3 cm",
+    "observacoes": "Valor referente ao pedido mínimo de 2 fotos, podendo ser cores diferentes. Cada foto adicional custa R$ 4,00. O cliente deve enviar no mínimo 2 fotos, podendo acrescentar mais, sempre enviando todas juntas. Este modelo não aceita legenda."
   },
   {
     "nome": "Polaroid Mini Color",
-    "descricao": "4 unidades",
+    "descricao": "Foto polaroid com bordas coloridas, na cor escolhida pelo cliente",
     "preco": 12.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true,
+    "quantidade_minima": 4,
+    "preco_adicional": 3.0,
+    "aceita_legenda": false,
+    "tamanho": "5,5 x 4,5 cm",
+    "observacoes": "Valor referente ao pedido mínimo de 4 fotos. Cada foto adicional custa R$ 3,00. O cliente deve enviar no mínimo 4 fotos, podendo acrescentar mais, sempre enviando todas juntas. Este modelo não aceita legenda."
   },
   {
     "nome": "Polaroid Color",
-    "descricao": "4 unidades",
+    "descricao": "Foto polaroid com bordas coloridas, na cor escolhida pelo cliente, podendo ser cores diferentes no mesmo pedido",
     "preco": 16.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true,
+    "quantidade_minima": 4,
+    "preco_adicional": 4.0,
+    "aceita_legenda": false,
+    "tamanho": "6 x 7,5 cm",
+    "observacoes": "Valor referente ao pedido mínimo de 4 fotos. Cada foto adicional custa R$ 4,00. O cliente deve enviar no mínimo 4 fotos, podendo acrescentar mais, sempre enviando todas juntas. Este modelo não aceita legenda."
   },
   {
     "nome": "Quadradinho com ímã",
     "descricao": "4 unidades",
     "preco": 24.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true
   },
   {
     "nome": "Vertical com ímã",
     "descricao": "4 unidades",
     "preco": 32.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true
   },
   {
     "nome": "Retangular com ímã",
     "descricao": "4 unidades",
     "preco": 24.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true
   },
   {
     "nome": "Instax com ímã",
     "descricao": "4 unidades",
     "preco": 24.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true
   },
   {
     "nome": "Polaroid Mini com ímã",
-    "descricao": null,
     "preco": 18.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true
   },
   {
     "nome": "Polaroid com ímã",
     "descricao": "4 unidades",
     "preco": 24.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true
   },
   {
     "nome": "Quadradinho Mini",
-    "descricao": null,
+    "descricao": "Foto Quadradinho Mini (4,8 x 4,8 cm)",
     "preco": 12.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true,
+    "quantidade_minima": 4,
+    "preco_adicional": 3.0,
+    "aceita_legenda": false,
+    "tamanho": "4,8 x 4,8 cm",
+    "observacoes": "Valor referente ao mínimo de 4 fotos. Cada foto adicional custa R$ 3,00. O cliente deve enviar no mínimo 4 fotos, podendo acrescentar mais, todas enviadas no mesmo pedido. Este modelo não aceita legenda ou texto."
   },
   {
     "nome": "Quadradinho",
-    "descricao": "4 unidades",
+    "descricao": "Foto Quadradinho 6x6 cm",
     "preco": 14.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true,
+    "quantidade_minima": 4,
+    "preco_adicional": 3.5,
+    "aceita_legenda": false,
+    "tamanho": "6x6 cm",
+    "observacoes": "Valor referente ao mínimo de 4 fotos. Cada foto adicional custa R$ 3,50. O cliente deve enviar no mínimo 4 fotos, podendo adicionar mais imagens, todas enviadas juntas. Este modelo não aceita legenda, texto ou frase."
   },
   {
     "nome": "Vertical",
-    "descricao": "4 unidades",
+    "descricao": "Foto Vertical 9,5 x 7 cm",
     "preco": 14.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true,
+    "quantidade_minima": 4,
+    "preco_adicional": 3.5,
+    "aceita_legenda": false,
+    "tamanho": "9,5 x 7 cm",
+    "observacoes": "Valor referente ao pedido mínimo de 4 fotos. Cada foto adicional custa R$ 3,50. O cliente deve enviar no mínimo 4 fotos, podendo acrescentar mais, sempre enviando todas juntas. Este modelo não aceita legenda, texto ou frase."
   },
   {
     "nome": "Retangular",
-    "descricao": "4 unidades",
+    "descricao": "Foto Retangular 6,5 x 7,5 cm",
     "preco": 14.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true,
+    "quantidade_minima": 4,
+    "preco_adicional": 3.5,
+    "aceita_legenda": false,
+    "tamanho": "6,5 x 7,5 cm",
+    "observacoes": "Valor referente ao pedido mínimo de 4 fotos. Cada foto adicional custa R$ 3,50. O cliente deve enviar no mínimo 4 fotos, podendo acrescentar mais, sempre enviando todas juntas. Este modelo não aceita legenda, texto ou frase."
   },
   {
     "nome": "Kit Álbum",
-    "descricao": null,
     "preco": 52.0,
     "categoria": "Álbuns e Livros",
     "requisicao_fotos": true
   },
   {
     "nome": "Chaveiro Coração com Tassel",
-    "descricao": null,
     "preco": 20.0,
     "categoria": "Chaveiros"
   },
   {
     "nome": "Chaveiro Coração",
-    "descricao": null,
     "preco": 18.0,
     "categoria": "Chaveiros"
   },
   {
     "nome": "Quadro Amor",
-    "descricao": null,
     "preco": 80.0,
     "categoria": "Quadros",
     "requisicao_fotos": true
   },
   {
     "nome": "Quadro Dois vidros",
-    "descricao": null,
     "preco": 48.0,
     "categoria": "Quadros",
     "requisicao_fotos": true
   },
   {
     "nome": "Quadro spotify",
-    "descricao": null,
     "preco": 48.0,
     "categoria": "Quadros",
     "requisicao_fotos": true
   },
   {
     "nome": "Álbum",
-    "descricao": null,
     "preco": 20.0,
     "categoria": "Álbuns e Livros",
     "requisicao_fotos": true
   },
   {
     "nome": "Marca página",
-    "descricao": null,
     "preco": 5.0,
     "categoria": "Acessórios e Presentes"
   },
   {
     "nome": "Polaroid de mesa",
-    "descricao": null,
     "preco": 35.0,
     "categoria": "Polaroids e Fotos",
     "requisicao_fotos": true
   },
   {
     "nome": "Bloquinho",
-    "descricao": null,
     "preco": 45.0,
     "categoria": "Acessórios e Presentes"
   },
   {
     "nome": "Kit Declaração",
-    "descricao": null,
     "preco": 70.0,
     "categoria": "Álbuns e Livros",
     "requisicao_fotos": true
   },
   {
     "nome": "Polaroid",
-    "descricao": "4 unidades",
+    "descricao": "Foto Polaroid (6 x 7,5 cm)",
     "preco": 14.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true,
+    "quantidade_minima": 4,
+    "preco_adicional": 3.5,
+    "aceita_legenda": true,
+    "preco_legenda": 0.5,
+    "tamanho": "6 x 7,5 cm",
+    "observacoes": "Valor referente ao pedido mínimo de 4 fotos. Cada foto adicional custa R$ 3,50. O cliente deve enviar no mínimo 4 fotos, podendo acrescentar mais, sempre enviando todas juntas. Este modelo aceita legenda por 0,50 em cada foto."
   },
   {
     "nome": "Tirinha",
-    "descricao": "2 unidades",
-    "preco": 8.0,
-    "categoria": "Polaroids e Fotos"
+    "descricao": "Tirinha (6 x 15 cm)",
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true,
+    "quantidade_minima": 2,
+    "aceita_legenda": true,
+    "preco_legenda": 0.5,
+    "tamanho": "6 x 15 cm",
+    "observacoes": "Valor: informar no atendimento. Pedido mínimo de 2 tirinhas. Cada tirinha é composta por 3 fotos, sendo obrigatório o envio das 3 imagens para cada tirinha solicitada. O cliente deve enviar todas as fotos juntas. Este modelo aceita legenda pequena, com adicional de R$ 0,50 por tirinha."
   },
   {
     "nome": "Instax",
-    "descricao": "4 unidades",
+    "descricao": "Foto Instax (8,3 x 5,3 cm)",
     "preco": 14.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true,
+    "quantidade_minima": 4,
+    "preco_adicional": 3.5,
+    "aceita_legenda": true,
+    "preco_legenda": 0.5,
+    "tamanho": "8,3 x 5,3 cm",
+    "observacoes": "Valor referente ao pedido mínimo de 4 fotos. Cada foto adicional custa R$ 3,50. O cliente deve enviar no mínimo 4 fotos, podendo acrescentar mais, sempre enviando todas juntas. Este modelo aceita legenda, com adicional de R$ 0,50 por foto."
   },
   {
     "nome": "Horizontal",
-    "descricao": "4 unidades",
+    "descricao": "Foto Horizontal (8 x 6 cm)",
     "preco": 14.0,
-    "categoria": "Polaroids e Fotos"
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true,
+    "quantidade_minima": 4,
+    "preco_adicional": 3.5,
+    "aceita_legenda": true,
+    "preco_legenda": 0.5,
+    "tamanho": "8 x 6 cm",
+    "observacoes": "Valor referente ao pedido mínimo de 4 fotos. Cada foto adicional custa R$ 3,50. O cliente deve enviar no mínimo 4 fotos, podendo acrescentar mais, sempre enviando todas juntas. Este modelo aceita legenda, com adicional de R$ 0,50 por foto."
   },
   {
     "nome": "Horizontal Mini",
-    "descricao": null,
-    "preco": 12.0,
-    "categoria": "Polaroids e Fotos"
+    "descricao": "Foto Horizontal Mini (6 x 5 cm)",
+    "preco": 14.0,
+    "categoria": "Polaroids e Fotos",
+    "requisicao_fotos": true,
+    "quantidade_minima": 4,
+    "preco_adicional": 3.5,
+    "aceita_legenda": true,
+    "preco_legenda": 0.5,
+    "tamanho": "6 x 5 cm",
+    "observacoes": "Valor referente ao pedido mínimo de 4 fotos. Cada foto adicional custa R$ 3,50. O cliente deve enviar no mínimo 4 fotos, podendo acrescentar mais, sempre enviando todas juntas. Este modelo aceita legenda, com adicional de R$ 0,50 por foto."
   },
   {
     "nome": "Chaveiro Simples",

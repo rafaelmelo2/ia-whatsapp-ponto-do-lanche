@@ -1,0 +1,18 @@
+{
+    "nome": "string",
+    "descricao": "string",
+    "preco": "number",
+    "preco_original": "number",
+    "categoria": "string",
+    "requisicao_fotos": "boolean",
+    "quantidade_minima": "number",
+    "preco_adicional": "number",
+    "aceita_legenda": "boolean",
+    "preco_legenda": "number",
+    "tamanho": "string",
+    "observacoes": "string",
+    "itens_gastos": "string",
+    "ativo": "boolean",
+    "prazo_producao": "number",
+    "destaque": "boolean"
+}
