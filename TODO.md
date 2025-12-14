@@ -14,6 +14,9 @@
 - Programa pra cadastrar o catálogo e puxar sempre a API.
 
 
+# PEGAR IP DO WSL
+- ip addr show eth0 | grep "inet " | awk '{print $2}' | cut -d/ -f1
+
 
 ITEM
 {

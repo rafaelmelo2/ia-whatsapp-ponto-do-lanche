@@ -7,7 +7,6 @@ export interface IPhoto extends Document {
   filename: string;
   caption?: string;
   uploadedAt: Date;
-  filePath?: string; // Caminho relativo ou absoluto
 }
 
 const PhotoSchema = new Schema<IPhoto>({
@@ -16,8 +15,7 @@ const PhotoSchema = new Schema<IPhoto>({
   itemName: { type: String, required: true },
   filename: { type: String, required: true },
   caption: { type: String },
-  uploadedAt: { type: Date, default: Date.now },
-  filePath: { type: String }
+  uploadedAt: { type: Date, default: Date.now }
 });
 
 // Índice para buscar fotos de um pedido rapidamente

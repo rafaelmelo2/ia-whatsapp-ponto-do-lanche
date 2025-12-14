@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # MongoDB Database
   mongodb:
@@ -24,6 +22,7 @@ services:
       # CLIENT_ID será detectado automaticamente do container_name
       # Mas pode ser sobrescrito se necessário
       - CLIENT_ID=${CLIENT_ID:-ponto-do-lanche}
+      - DOCKER_CONTAINER=true
       - CHUTES_AI_API_KEY=${CHUTES_AI_API_KEY}
       # OPENAI_API_KEY também definida para compatibilidade com bindTools do Langchain
       - OPENAI_API_KEY=${CHUTES_AI_API_KEY}
@@ -56,6 +55,7 @@ services:
       # CLIENT_ID será detectado automaticamente do container_name
       # Mas pode ser sobrescrito se necessário
       - CLIENT_ID=${CLIENT_ID:-emunah}
+      - DOCKER_CONTAINER=true
       - CHUTES_AI_API_KEY=${CHUTES_AI_API_KEY}
       # OPENAI_API_KEY também definida para compatibilidade com bindTools do Langchain
       - OPENAI_API_KEY=${CHUTES_AI_API_KEY}

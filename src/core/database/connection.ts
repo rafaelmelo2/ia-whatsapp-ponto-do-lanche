@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { logger } from "../utils/logger.js";
+import fs from "fs";
 
 let isConnected = false;
 
@@ -16,6 +17,15 @@ export async function connectDatabase(uri?: string): Promise<void> {
   const DB_NAME = "whatsapp-bot";
   let mongoUri = uri || process.env.MONGODB_URI || `mongodb://localhost:27017/${DB_NAME}`;
   
+  // Detecta se está rodando fora do Docker (hostname "mongodb" não resolve)
+  // Se a URI contém "mongodb:27017" e NÃO estamos num container Docker, usa localhost
+  const isDocker = process.env.DOCKER_CONTAINER === "true" || fs.existsSync("/.dockerenv");
+  
+  if (mongoUri.includes("mongodb://mongodb:27017") && !isDocker) {
+    mongoUri = mongoUri.replace("mongodb://mongodb:", "mongodb://localhost:");
+    logger.info(`🔄 Ajustando URI do MongoDB para ambiente local: ${mongoUri.replace(/\/\/.*@/, "//***@")}`);
+  }
+
   // Garante que a URI sempre especifica o banco de dados correto
   if (!mongoUri.includes(`/${DB_NAME}`)) {
     // Remove qualquer nome de banco existente e adiciona o correto

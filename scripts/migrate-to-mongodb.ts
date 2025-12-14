@@ -5,10 +5,12 @@ import { connectDatabase, disconnectDatabase } from "../src/core/database/connec
 import { MongoDBOrderRepository } from "../src/core/database/repositories/OrderRepository.js";
 import { MongoDBConversationRepository } from "../src/core/database/repositories/ConversationRepository.js";
 import { MongoDBAppointmentRepository } from "../src/core/database/repositories/AppointmentRepository.js";
+import { MongoDBPhotoRepository, PhotoData } from "../src/core/database/repositories/PhotoRepository.js";
 import { Order } from "../src/core/workflows/modular/commerce/types.js";
 import { Appointment } from "../src/core/workflows/modular/appointment/types.js";
 import { ConversationState } from "../src/core/orders/orderState.js";
 import { logger } from "../src/core/utils/logger.js";
+import { PhotoMetadata } from "../src/core/services/photoService.js";
 
 /**
  * Script para migrar dados JSON existentes para MongoDB
@@ -166,6 +168,66 @@ async function migrateAppointments(clientId: string) {
 }
 
 /**
+ * Migra metadados de fotos de arquivos JSON para MongoDB
+ * ⚠️ Os arquivos JSON originais NÃO SÃO APAGADOS, apenas copiados
+ */
+async function migratePhotos(clientId: string) {
+  const photosDir = path.resolve(process.cwd(), "src", "data", clientId, "photos");
+  if (!fs.existsSync(photosDir)) {
+    logger.info(`[${clientId}] Pasta de fotos não existe: ${photosDir}`);
+    return 0;
+  }
+
+  // A estrutura é: photos/{orderId}/{itemName}/metadata.json
+  const repo = new MongoDBPhotoRepository(clientId);
+  let migrated = 0;
+
+  try {
+    const orderDirs = fs.readdirSync(photosDir);
+    
+    for (const orderId of orderDirs) {
+      const orderPath = path.join(photosDir, orderId);
+      if (!fs.statSync(orderPath).isDirectory()) continue;
+
+      const itemDirs = fs.readdirSync(orderPath);
+      for (const itemName of itemDirs) {
+        const itemPath = path.join(orderPath, itemName);
+        if (!fs.statSync(itemPath).isDirectory()) continue;
+
+        const metadataPath = path.join(itemPath, "metadata.json");
+        if (fs.existsSync(metadataPath)) {
+          try {
+            const content = await fs.promises.readFile(metadataPath, "utf8");
+            const photos: PhotoMetadata[] = JSON.parse(content);
+            
+            for (const photo of photos) {
+              const filePath = path.join(itemPath, photo.filename);
+              
+              await repo.save({
+                clientId,
+                orderId,
+                itemName, // Note: o nome do diretório pode ser sanitizado, mas o metadata tem o nome real se disponível, ou usamos o do dir
+                filename: photo.filename,
+                caption: photo.caption,
+                uploadedAt: new Date(photo.uploadedAt),
+                filePath
+              });
+              migrated++;
+            }
+          } catch (err) {
+            logger.error(`[${clientId}] Erro ao migrar fotos de ${orderId}/${itemName}:`, err);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    logger.error(`[${clientId}] Erro ao ler diretório de fotos:`, error);
+  }
+
+  return migrated;
+}
+
+/**
  * Função auxiliar para detectar a URI do MongoDB baseado no ambiente
  * Se estiver rodando fora do Docker, usa localhost
  */
@@ -215,10 +277,14 @@ async function main() {
     logger.info("📅 Migrando agendamentos...");
     const appointmentsMigrated = await migrateAppointments(clientId);
     
+    logger.info("📸 Migrando fotos (metadados)...");
+    const photosMigrated = await migratePhotos(clientId);
+    
     logger.info(`✅ Migração concluída!`);
     logger.info(`   - Pedidos: ${ordersMigrated}`);
     logger.info(`   - Conversas: ${conversationsMigrated}`);
     logger.info(`   - Agendamentos: ${appointmentsMigrated}`);
+    logger.info(`   - Fotos: ${photosMigrated}`);
     logger.info(`⚠️  Lembrete: Os arquivos JSON originais foram preservados e não foram apagados`);
     
     await disconnectDatabase();

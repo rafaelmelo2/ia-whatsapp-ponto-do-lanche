@@ -12,7 +12,7 @@ Bot inteligente para WhatsApp que utiliza IA para atender clientes, processar pe
 - 📦 **Gestão de Estado**: Mantém contexto da conversa durante todo o atendimento
 - ⚙️ **Multi-Cliente**: Suporta múltiplos clientes com configurações isoladas
 - 🔒 **Guardrails**: Validação de segurança para respostas da IA
-- 📊 **Persistência**: Salva conversas e pedidos em arquivos JSON
+- 📊 **Persistência**: Salva conversas, pedidos e metadados em MongoDB
 - 👥 **Comandos de Grupo**: Sistema de pausa/retomada via grupos do WhatsApp
 - 🧩 **Modo Modular**: Detecta automaticamente o tipo de negócio e ativa módulos correspondentes
 
@@ -146,10 +146,12 @@ docker-compose -f docker-compose.prod.yml down
 │   │       └── config.yaml      # Configuração da loja
 │   ├── data/                    # Dados persistidos (por cliente)
 │   │   └── <CLIENT_ID>/         # Dados isolados por cliente
-│   │       ├── conversations/   # Histórico de conversas
-│   │       ├── orders/          # Pedidos salvos
+│   │       ├── photos/          # Fotos de pedidos (arquivos físicos)
 │   │       ├── menu/            # Cache do catálogo
 │   │       └── tokens/          # Tokens de autenticação WhatsApp
+│   │   └── database/            # Repositórios MongoDB
+│   │       ├── models/          # Modelos Mongoose
+│   │       └── repositories/   # Repositórios de dados
 │   └── index.ts                 # Ponto de entrada
 ├── dist/                        # Build de produção
 ├── scripts/                     # Scripts utilitários

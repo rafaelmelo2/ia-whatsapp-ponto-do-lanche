@@ -53,6 +53,8 @@ export class MongoDBConversationRepository {
 
   async save(state: ConversationState): Promise<void> {
     try {
+      logger.info(`[${this.clientId}] 💾 Salvando conversa no MongoDB: ${state.phone} (${state.history.length} mensagens)`);
+      
       // Limitar histórico para não estourar tokens
       const limitedHistory = state.history.length > 30 
         ? state.history.slice(-30) 
@@ -72,15 +74,19 @@ export class MongoDBConversationRepository {
         isArchived: false
       };
 
-      await ConversationModel.findOneAndUpdate(
+      const result = await ConversationModel.findOneAndUpdate(
         { clientId: this.clientId, phone: state.phone, isArchived: false },
         conversationData,
         { upsert: true, new: true }
       );
 
-      logger.debug(`[${this.clientId}] Conversa salva no MongoDB: ${state.phone}`);
+      if (result) {
+        logger.info(`[${this.clientId}] ✅ Conversa salva com sucesso no MongoDB: ${state.phone} (ID: ${result._id})`);
+      } else {
+        logger.warn(`[${this.clientId}] ⚠️ Conversa não foi salva (resultado null): ${state.phone}`);
+      }
     } catch (error) {
-      logger.error(`[${this.clientId}] Erro ao salvar conversa de ${state.phone} no MongoDB`, error);
+      logger.error(`[${this.clientId}] ❌ Erro ao salvar conversa de ${state.phone} no MongoDB:`, error);
       throw error;
     }
   }

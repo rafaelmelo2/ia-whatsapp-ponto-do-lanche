@@ -405,6 +405,7 @@
     "nome": "Tirinha",
     "descricao": "Tirinha (6 x 15 cm)",
     "categoria": "Polaroids e Fotos",
+    "preco": 0.5,
     "requisicao_fotos": true,
     "quantidade_minima": 2,
     "aceita_legenda": true,

@@ -49,6 +49,7 @@ export class ConversationManager {
     content: string,
     thought?: string
   ): Promise<ConversationState> {
+    logger.info(`[${this.clientId}] 📝 Adicionando mensagem (${role}): ${phone.substring(0, 20)}...`);
     const state = await this.get(phone);
     state.history.push({ 
       role, 
@@ -56,7 +57,10 @@ export class ConversationManager {
       thought: thought || undefined, 
       timestamp: Date.now() 
     });
+    state.lastInteraction = Date.now();
+    logger.info(`[${this.clientId}] 💾 Chamando save() para ${phone}...`);
     await this.save(state);
+    logger.info(`[${this.clientId}] ✅ Mensagem adicionada e salva: ${phone}`);
     return state;
   }
 

@@ -109,6 +109,9 @@ export class BaileysProvider implements WhatsAppProvider {
         // Ignora mensagens próprias (opcional, depende do caso de uso)
         if (msg.key.fromMe) continue;
 
+        // Ignora mensagens de status@broadcast
+        if (msg.key.remoteJid === "status@broadcast") continue;
+
         const isGroup = msg.key.remoteJid?.endsWith("@g.us") || false;
         const hasImage = !!msg.message.imageMessage;
         const body = msg.message.conversation || msg.message.extendedTextMessage?.text || msg.message.imageMessage?.caption || "";

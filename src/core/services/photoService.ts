@@ -91,8 +91,7 @@ export class PhotoService {
         itemName,
         filename,
         caption,
-        uploadedAt,
-        filePath
+        uploadedAt
       });
 
       const metadata: PhotoMetadata = {
@@ -101,9 +100,6 @@ export class PhotoService {
         uploadedAt: uploadedAt.toISOString(),
         itemName
       };
-
-      // Não salvamos mais metadata.json no disco
-      // await this.saveMetadata(orderId, itemName, metadata);
 
       logger.info(`[PhotoService] Foto salva e metadata persistido no MongoDB: ${filename}`);
       return metadata;
@@ -120,11 +116,6 @@ export class PhotoService {
     try {
       // Busca metadados do MongoDB
       const photos = await this.photoRepo.getByOrderId(orderId);
-      
-      if (photos.length === 0) {
-        // Fallback para sistema de arquivos antigo se não encontrar no banco (migração gradual)
-        return this.getOrderPhotosLegacy(orderId);
-      }
 
       // Agrupa por item
       const itemsMap = new Map<string, PhotoMetadata[]>();
@@ -150,55 +141,6 @@ export class PhotoService {
       logger.error(`[PhotoService] Erro ao buscar fotos do pedido ${orderId}:`, error);
       return [];
     }
-  }
-
-  /**
-   * Fallback para ler do disco (mantido para compatibilidade com dados antigos não migrados)
-   */
-  private async getOrderPhotosLegacy(orderId: string): Promise<ItemPhotos[]> {
-    const orderDir = path.join(this.photosDir, orderId);
-    if (!fs.existsSync(orderDir)) {
-      return [];
-    }
-
-    const items: ItemPhotos[] = [];
-    try {
-      const itemDirs = await fs.promises.readdir(orderDir, { withFileTypes: true });
-
-      for (const itemDir of itemDirs) {
-        if (!itemDir.isDirectory()) continue;
-
-        const itemName = itemDir.name; // Note: this is sanitized name, might not be original itemName
-        // Tentar recuperar nome real do metadata se existir
-        const metadataPath = path.join(orderDir, itemName, "metadata.json");
-
-        let photos: PhotoMetadata[] = [];
-        if (fs.existsSync(metadataPath)) {
-          const metadataContent = await fs.promises.readFile(metadataPath, "utf8");
-          photos = JSON.parse(metadataContent);
-          // Se tiver fotos, usa o itemName da primeira foto
-          const realItemName = photos.length > 0 ? photos[0].itemName : itemName;
-          items.push({ itemName: realItemName, photos });
-        } else {
-          // Fallback: lista arquivos de imagem diretamente
-          const files = await fs.promises.readdir(path.join(orderDir, itemName));
-          const validFiles = files.filter((f) => f.match(/\.(jpg|jpeg|png|gif)$/i));
-          
-          if (validFiles.length > 0) {
-             photos = validFiles.map((f) => ({
-              filename: f,
-              uploadedAt: new Date().toISOString(),
-              itemName
-            }));
-            items.push({ itemName, photos });
-          }
-        }
-      }
-    } catch (e) {
-      logger.warn(`[PhotoService] Erro no fallback legacy: ${e}`);
-    }
-
-    return items;
   }
 
   /**

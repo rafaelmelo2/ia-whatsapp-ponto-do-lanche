@@ -7,7 +7,6 @@ export interface PhotoData {
   filename: string;
   caption?: string;
   uploadedAt?: Date;
-  filePath?: string;
 }
 
 export class MongoDBPhotoRepository {
