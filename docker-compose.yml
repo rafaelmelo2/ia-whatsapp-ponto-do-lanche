@@ -1,6 +1,19 @@
 version: '3.8'
 
 services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: whatsapp-bot-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=whatsapp-bot
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - whatsapp-bot-network
   # Cliente: Ponto do Lanche
   ponto-do-lanche:
     build:
@@ -16,6 +29,7 @@ services:
       - OPENAI_API_KEY=${CHUTES_AI_API_KEY}
       - PORT=3000
       - LOG_LEVEL=info
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/whatsapp-bot}
       - PONTO_DO_LANCHE_NOTIFICATION_GROUP_ID=${PONTO_DO_LANCHE_NOTIFICATION_GROUP_ID:-}
       - PONTO_DO_LANCHE_COMMANDS_GROUP_ID=${PONTO_DO_LANCHE_COMMANDS_GROUP_ID:-}
       - PONTO_DO_LANCHE_ADMIN_PHONES=${PONTO_DO_LANCHE_ADMIN_PHONES:-}
@@ -47,6 +61,7 @@ services:
       - OPENAI_API_KEY=${CHUTES_AI_API_KEY}
       - PORT=3000
       - LOG_LEVEL=info
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/whatsapp-bot}
       - EMUNAH_NOTIFICATION_GROUP_ID=${EMUNAH_NOTIFICATION_GROUP_ID:-}
       - EMUNAH_COMMANDS_GROUP_ID=${EMUNAH_COMMANDS_GROUP_ID:-}
       - EMUNAH_ADMIN_PHONES=${EMUNAH_ADMIN_PHONES:-}
@@ -97,4 +112,7 @@ services:
 networks:
   whatsapp-bot-network:
     driver: bridge
+
+volumes:
+  mongodb_data:
 

@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { loadConfig } from "./core/config/loadConfig.js";
+import { connectDatabase } from "./core/database/connection.js";
 import { PromptGuard } from "./core/llm/guard.js";
 import { LangchainModel } from "./core/llm/langchainModel.js";
 import { PromptBuilder } from "./core/llm/promptBuilder.js";
@@ -29,6 +30,9 @@ function getEnvVarName(baseName: string, clientId: string): string {
 
 async function main() {
   try {
+    // Conectar ao MongoDB
+    await connectDatabase();
+
     const port = Number(process.env.PORT) || 3000;
     startServer(port, CLIENT_ID);
 
@@ -67,7 +71,7 @@ async function main() {
       .map((p) => p.trim())
       .filter(Boolean);
 
-    const commandManager = new GroupCommandManager(commandGroupId, adminPhones);
+    const commandManager = new GroupCommandManager(commandGroupId, adminPhones, CLIENT_ID);
 
     if (commandGroupId) {
       clientLogger.info(`Grupo de comandos configurado: ${commandGroupId}`);
@@ -95,7 +99,7 @@ async function main() {
       switch (command.type) {
         case "start":
           if (command.targetPhone) {
-            commandManager.resumeNumber(command.targetPhone);
+            await commandManager.resumeNumber(command.targetPhone);
             response = `✅ Bot retomado para ${command.targetPhone.split("@")[0]}`;
           } else {
             response = `✅ Bot iniciado. Use /stop <número> ou /<número> para pausar atendimento automático.`;
@@ -105,7 +109,7 @@ async function main() {
         case "stop":
         case "pause":
           if (command.targetPhone) {
-            commandManager.pauseNumber(command.targetPhone);
+            await commandManager.pauseNumber(command.targetPhone, senderPhone);
             response = `⏸️ Bot pausado para ${
               command.targetPhone.split("@")[0]
             }. Agora você pode assumir o atendimento manualmente.`;
@@ -116,7 +120,7 @@ async function main() {
 
         case "resume":
           if (command.targetPhone) {
-            commandManager.resumeNumber(command.targetPhone);
+            await commandManager.resumeNumber(command.targetPhone);
             response = `▶️ Bot retomado para ${command.targetPhone.split("@")[0]}`;
           } else {
             response = `❌ Por favor, informe o número: /resume <número>`;
@@ -124,7 +128,7 @@ async function main() {
           break;
 
         case "status":
-          const pausedNumbers = commandManager.getAllPausedNumbers();
+          const pausedNumbers = await commandManager.getAllPausedNumbers();
           if (pausedNumbers.length === 0) {
             response = `✅ Bot ativo. Nenhum número pausado no momento.`;
           } else {
@@ -143,7 +147,7 @@ async function main() {
     // 3. Handler de Mensagens
     whatsapp.onMessage(async (msg) => {
       // Verifica se o número está pausado (modo manual)
-      if (commandManager.isPaused(msg.from)) {
+      if (await commandManager.isPaused(msg.from)) {
         clientLogger.info(`Mensagem de ${msg.from.split("@")[0]} ignorada (modo manual ativo)`);
         return; // Não responde automaticamente
       }

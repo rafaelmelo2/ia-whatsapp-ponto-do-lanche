@@ -1,3 +1,6 @@
+import { MongoDBBlockedNumberRepository } from "../database/repositories/BlockedNumberRepository.js";
+import { logger } from "../utils/logger.js";
+
 export interface GroupCommand {
   type: "start" | "stop" | "pause" | "resume" | "status";
   targetPhone?: string;
@@ -6,12 +9,15 @@ export interface GroupCommand {
 }
 
 export class GroupCommandManager {
-  private pausedNumbers: Set<string> = new Set(); // Números pausados (modo manual)
+  private blockedNumberRepo: MongoDBBlockedNumberRepository;
   private commandGroupId: string | null = null; // Grupo permitido para comandos
   private adminPhones: Set<string> = new Set(); // Números autorizados a dar comandos
+  private clientId: string;
 
-  constructor(commandGroupId: string | null, adminPhones: string[]) {
+  constructor(commandGroupId: string | null, adminPhones: string[], clientId: string) {
     this.commandGroupId = commandGroupId;
+    this.clientId = clientId;
+    this.blockedNumberRepo = new MongoDBBlockedNumberRepository(clientId);
     adminPhones.forEach((p) => this.adminPhones.add(this.normalizePhone(p)));
   }
 
@@ -109,23 +115,40 @@ export class GroupCommandManager {
     return null;
   }
 
-  pauseNumber(phone: string): void {
-    const normalized = this.normalizePhone(phone);
-    this.pausedNumbers.add(normalized);
+  async pauseNumber(phone: string, blockedBy?: string): Promise<void> {
+    try {
+      await this.blockedNumberRepo.blockNumber(phone, blockedBy, "Pausado via comando de grupo");
+    } catch (error) {
+      logger.error(`[${this.clientId}] Erro ao pausar número ${phone}`, error);
+      throw error;
+    }
   }
 
-  resumeNumber(phone: string): void {
-    const normalized = this.normalizePhone(phone);
-    this.pausedNumbers.delete(normalized);
+  async resumeNumber(phone: string): Promise<void> {
+    try {
+      await this.blockedNumberRepo.unblockNumber(phone);
+    } catch (error) {
+      logger.error(`[${this.clientId}] Erro ao retomar número ${phone}`, error);
+      throw error;
+    }
   }
 
-  isPaused(phone: string): boolean {
-    const normalized = this.normalizePhone(phone);
-    return this.pausedNumbers.has(normalized);
+  async isPaused(phone: string): Promise<boolean> {
+    try {
+      return await this.blockedNumberRepo.isBlocked(phone);
+    } catch (error) {
+      logger.error(`[${this.clientId}] Erro ao verificar se número ${phone} está pausado`, error);
+      return false;
+    }
   }
 
-  getAllPausedNumbers(): string[] {
-    return Array.from(this.pausedNumbers);
+  async getAllPausedNumbers(): Promise<string[]> {
+    try {
+      return await this.blockedNumberRepo.getAllBlocked();
+    } catch (error) {
+      logger.error(`[${this.clientId}] Erro ao buscar números pausados`, error);
+      return [];
+    }
   }
 
   private normalizePhone(phone: string): string {

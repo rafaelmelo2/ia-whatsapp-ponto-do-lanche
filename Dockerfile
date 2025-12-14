@@ -33,12 +33,22 @@ COPY --from=builder /app/dist ./dist
 # Copia assets necessários (markdown, yaml, etc)
 COPY --from=builder /app/src ./src
 
-# Copia script de entrypoint
+# Cria estrutura de diretórios
+RUN mkdir -p scripts src/data src/clients logs
+
+# Copia script de entrypoint do builder
 COPY --from=builder /app/scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 
-# Cria estrutura de diretórios para dados
-RUN mkdir -p src/data src/clients logs && \
-    chmod +x scripts/docker-entrypoint.sh
+# Converte quebras de linha para Unix (LF) se necessário e configura permissões
+RUN if [ -f scripts/docker-entrypoint.sh ]; then \
+      tr -d '\r' < scripts/docker-entrypoint.sh > scripts/docker-entrypoint.sh.tmp && \
+      mv scripts/docker-entrypoint.sh.tmp scripts/docker-entrypoint.sh; \
+    fi && \
+    chmod +x scripts/docker-entrypoint.sh && \
+    test -x scripts/docker-entrypoint.sh && \
+    echo "✅ Entrypoint script preparado" && \
+    head -1 scripts/docker-entrypoint.sh && \
+    ls -la scripts/docker-entrypoint.sh
 
 # Variáveis de ambiente padrão
 ENV NODE_ENV=production
