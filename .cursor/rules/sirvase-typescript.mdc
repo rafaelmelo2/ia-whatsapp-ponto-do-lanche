@@ -1,0 +1,45 @@
+---
+description: Padrões TypeScript ao editar packages, services e apps
+globs: packages/**/*.ts,services/**/*.ts,apps/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# TypeScript no monorepo
+
+## Onde colocar código novo
+
+| Tipo | Local |
+|------|-------|
+| Porta (interface) | `packages/core/src/ports/` |
+| Domínio, pipeline, prompt | `packages/core/src/` |
+| SDK / I/O externo | `packages/adapters/src/` |
+| Loader settings | `packages/config/src/` |
+| SQL + repos | `packages/db/` |
+| HTTP webhook | `services/webhook/` |
+| Fila + pipeline | `services/worker/` |
+| REST + JWT | `services/api/` |
+| UI | `apps/panel/` (Épico 7) |
+
+## Proibido no `core`
+
+- `import` de SDK de terceiros
+- `process.env` (só via settings injetados)
+- I/O de rede, filesystem, Redis, Postgres
+
+## Exemplo de wiring correto
+
+```typescript
+// services/worker — OK
+import { processMessage } from '@sirvase/core';
+import { createWhatsAppProvider } from '@sirvase/adapters';
+import { settings } from '@sirvase/config';
+
+// packages/core — ERRADO
+import axios from 'axios'; // → criar porta + adaptador
+```
+
+## Testes
+
+- Framework: `bun:test`
+- Preferir `packages/core/test/` para domínio
+- Caminho crítico obrigatório: fan-out, idempotência, isolamento de tenant

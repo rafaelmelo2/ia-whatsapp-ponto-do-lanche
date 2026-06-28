@@ -1,0 +1,42 @@
+---
+description: Decisões travadas do Sirvase — não reabrir sem pedido explícito do usuário
+alwaysApply: true
+---
+
+# Decisões travadas (guardrails)
+
+Estas escolhas são **intencionais**. Não proponha alternativas, não reabra debate, não implemente o caminho adiado "por conveniência".
+
+## Produto e integrações
+
+| Decisão | Escolha travada |
+|---------|-----------------|
+| Auth | JWT próprio (argon2/bcrypt). **Sem Supabase Auth.** |
+| WhatsApp | Meta Cloud API **direto**. BSP / Embedded Signup **adiado** (Épico futuro). |
+| Coexistência | **n8n continua em produção** até shadow mode + cutover por tenant. |
+| Cardápio | `cardapio_source`: **interno (CRUD)** com opção **externa** (`external-api`). |
+| Billing | **Asaas**, mensalidade fixa, **trial 14 dias**. |
+| Painel MVP | Vite + React + **shadcn/ui** — pedidos realtime, handoff, cardápio. |
+| LLM | **OpenRouter** (não Chutes direto no produto novo). |
+| Nicho | **Food service** primeiro; 1º cliente real = hamburgueria (Ponto do Lanche). |
+| Nome | **Sirvase** (repo e produto). |
+
+## Toolchain (já em uso no monorepo)
+
+| Decisão | Escolha travada |
+|---------|-----------------|
+| Runtime | **Bun** (≥1.3). Não npm/pnpm para scripts/deps. |
+| Workspaces | `packages/*`, `services/*` (`apps/*` no Épico 7). |
+| Imports entre pacotes | Bare specifier: `@sirvase/core`, `@sirvase/config`, etc. |
+| Imports intra-pacote | Relativo com sufixo `.js` (Bun resolve para `.ts`). |
+| Config | `.env` **única na raiz** + `config/app/{env}.yaml`. Sem `.env` em subpasta. |
+| Legado | `_legacy/` é referência; não expandir. Código novo nos épicos do plano. |
+
+## Forks ainda não escolhidos (não adivinhar)
+
+Ao chegar na tarefa, **pare e pergunte** — não é "trava ruim", é decisão pendente de implementação:
+
+- RLS Postgres vs isolamento só no repositório (P1.3)
+- Ferramenta de migrations: `node-pg-migrate` vs `drizzle-kit` (P1.1)
+- Modelo/tokens LLM no OpenRouter (Épico 5)
+- SSE vs WebSocket no painel (P7.2)

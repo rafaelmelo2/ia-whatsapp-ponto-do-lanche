@@ -1,0 +1,26 @@
+---
+description: O que NÃO construir no MVP — perguntar antes se achar necessário
+alwaysApply: true
+---
+
+# YAGNI — não construir agora
+
+Se a tarefa atual do plano não pedir, **não implemente**:
+
+- BSP / Embedded Signup
+- Multi-número por loja
+- RBAC multi-usuário
+- Auto-scaling horizontal
+- Áudio/imagem no pedido
+- A/B de prompt
+- i18n
+- BI / analytics rico
+- `apps/site` completo (landing mínima basta para GTM)
+- Heurística anti-ban Baileys (delay, typing, browser spoof) — morreu com Cloud API
+- Parser `<<<JSON>>>` em texto livre — substituir por tool-calling (Épico 5)
+- Estado de conversa/pedido em JSON em disco — Postgres (Épico 3.4)
+- `src/data/*.json` no git — PII; gitignored, aposentar com Postgres
+
+Tool-calling (Épico 5) é **paralelizável** — melhora qualidade, não bloqueia 1ª venda.
+
+Backup Postgres (P10.4) é **obrigatório antes do primeiro pagante** (P9.3), não YAGNI.

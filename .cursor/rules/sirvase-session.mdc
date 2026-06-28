@@ -1,0 +1,29 @@
+---
+description: Como iniciar e encerrar uma sessão de build no Sirvase
+alwaysApply: true
+---
+
+# Sessão de build
+
+## Ordem de leitura (obrigatória)
+
+1. `PROGRESSO_BUILD.md` — estado vivo; retome do **PRÓXIMO PASSO**
+2. `PLANO_EXECUCAO.md` — fase atual, entregas e "pronto quando"
+3. `claude.md` — regras de arquitetura e código
+
+`ROADMAP_SAAS.md` é **análise histórica do legado**. Em conflito com os dois acima, ignore o ROADMAP.
+
+## Durante o trabalho
+
+- Construa **só a fase atual** do plano. Não pule "pronto quando".
+- Escopo mínimo: a menor mudança que fecha o DoD da tarefa.
+- Ao terminar um bloco, atualize `PROGRESSO_BUILD.md` (status + próximo passo).
+- **Não commitar** nem criar PR sem o usuário pedir.
+
+## Quando parar e perguntar
+
+- Pedido que quebre uma decisão travada (ver regra `sirvase-decisions`).
+- Mudança em isolamento de tenant, schema de banco ou contrato de porta.
+- Qualquer coisa que exija desligar ou alterar o fluxo do n8n antes do shadow mode.
+- Biblioteca nova não trivial.
+- Ambiguidade entre "rápido agora" e regra de ouro: **a regra vence** — confirme com o usuário.

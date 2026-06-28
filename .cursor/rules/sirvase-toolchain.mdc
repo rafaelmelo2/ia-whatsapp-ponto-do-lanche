@@ -1,0 +1,38 @@
+---
+description: Comandos, Bun e Docker no monorepo Sirvase
+alwaysApply: true
+---
+
+# Toolchain
+
+## Comandos padrão
+
+```bash
+bun install              # deps + workspaces (gera bun.lock)
+bun run typecheck        # tsc --noEmit
+bun test                 # bun:test
+bun run lint / format    # quando configurados
+docker compose up -d     # infra (após Épico 0.3)
+```
+
+Dev por serviço: `bun run dev:api`, `dev:webhook`, `dev:worker`.
+
+## TypeScript
+
+- `strict: true`, sem `any` implícito
+- `moduleResolution: bundler`, `noEmit` (typecheck only)
+- Paths `@sirvase/*` em `tsconfig.base.json`
+- `_legacy/` excluído do typecheck
+
+## Docker / ambiente
+
+- `ENVIRONMENT` + `INGRESS_MODE` selecionam includes do compose e yaml em `config/`
+- Postgres + Redis como serviços; secrets só na `.env` raiz (ver `.env.example`)
+- WSL/Linux: paths e comandos no formato Linux
+
+## Código
+
+- **Zod** em toda entrada externa (webhook, API, config, tool-call)
+- Nomes em inglês no código; mensagens ao usuário final em PT-BR
+- Log estruturado com `tenant_id`, `message_id`; sem segredos nem PII desnecessária
+- Schema Zod de pedido existente — reutilizar, não reinventar

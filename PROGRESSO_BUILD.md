@@ -2,7 +2,8 @@
 
 > Arquivo de continuidade. Atualizar a cada bloco de trabalho. Uma nova sessão do
 > Claude deve ler **este arquivo + `PLANO_EXECUCAO.md` + `claude.md`** e retomar do
-> "PRÓXIMO PASSO" abaixo. Não commitar sem o usuário pedir.
+> "PRÓXIMO PASSO" abaixo. Regras persistentes para qualquer agente Cursor:
+> `.cursor/rules/sirvase-*.mdc`. Não commitar sem o usuário pedir.
 
 Última atualização: 2026-06-28 (sessão 1).
 

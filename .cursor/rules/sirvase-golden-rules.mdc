@@ -1,0 +1,33 @@
+---
+description: Regras de ouro de arquitetura — quebrar = refazer
+alwaysApply: true
+---
+
+# Regras de ouro
+
+Detalhes em `claude.md`. Resumo operacional:
+
+1. **Porta/adaptador** — SDKs (Meta, OpenRouter, Asaas) só em `packages/adapters`. `core` usa apenas `packages/core/src/ports/`.
+2. **Mock antes do real** — toda porta tem mock; pipeline roda ponta a ponta sem rede.
+3. **`tenant_id` em tudo** — query, job, log, cache key. Repo sem `tenant_id` = bug.
+4. **Idempotência primeiro** — dedup por `message_id` da Meta antes de LLM, pedido ou resposta.
+5. **Fail-fast** — config no boot via `packages/config`; secret faltando = crash com mensagem clara.
+6. **Webhook leve** — `services/webhook`: valida, enfileira, **200 em <5s**. Trabalho pesado no worker.
+7. **Lock por conversa** — `(tenant_id, from)` serializa; não remover (mata fan-out).
+
+## Fronteiras de import
+
+```
+apps/ services/  →  core + adapters + config
+core              →  (nada de adapters, services, SDK, process.env)
+adapters          →  core (ports)
+db                →  core (ports) + Postgres
+```
+
+## Fluxo de mensagem (alvo)
+
+```
+Meta → webhook (enqueue) → worker (dedup → lock → pipeline → send)
+```
+
+Roteamento: `phone_number_id` → `tenant`. Número desconhecido: descarta com log.
