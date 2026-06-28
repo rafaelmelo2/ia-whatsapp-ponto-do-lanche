@@ -1,0 +1,14 @@
+{
+  "name": "@sirvase/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun run --hot src/index.ts"
+  },
+  "dependencies": {
+    "@sirvase/config": "workspace:*",
+    "@sirvase/core": "workspace:*"
+  }
+}

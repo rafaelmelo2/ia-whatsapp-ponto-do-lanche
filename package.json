@@ -1,36 +1,36 @@
 {
-  "name": "ponto-do-lanche-bot",
-  "version": "2.0.0",
-  "description": "Bot WhatsApp SaaS para Ponto do Lanche (Core/Config Arch)",
-  "main": "dist/index.js",
+  "name": "sirvase",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sirvase — SaaS multi-tenant de atendimento e pedidos via WhatsApp (monorepo)",
   "type": "module",
-  "scripts": {
-    "build": "tsc && npm run copy-assets",
-    "copy-assets": "copyfiles -u 1 \"src/**/*.md\" dist",
-    "start": "node dist/index.js",
-    "dev": "node --no-warnings --loader ts-node/esm/transpile-only src/index.ts",
-    "test": "ts-node tests/orderParser.test.ts"
+  "workspaces": [
+    "packages/*",
+    "services/*"
+  ],
+  "engines": {
+    "bun": ">=1.3.0"
   },
-  "dependencies": {
-    "@whiskeysockets/baileys": "^7.0.0-rc.9",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.1",
-    "js-yaml": "^4.1.0",
-    "openai": "^4.73.0",
-    "pino": "^9.5.0",
-    "qrcode-terminal": "^0.12.0",
-    "uuid": "^11.0.3",
-    "winston": "^3.17.0",
-    "zod": "^3.23.8"
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "dev:api": "bun run --hot services/api/src/index.ts",
+    "dev:webhook": "bun run --hot services/webhook/src/index.ts",
+    "dev:worker": "bun run --hot services/worker/src/index.ts",
+    "up": "docker compose up -d",
+    "down": "docker compose down",
+    "logs": "docker compose logs -f",
+    "db:dump": "bash scripts/db-dump.sh",
+    "db:restore": "bash scripts/db-restore.sh"
   },
   "devDependencies": {
-    "copyfiles": "^2.4.1",
-    "@types/express": "^5.0.0",
-    "@types/js-yaml": "^4.0.9",
-    "@types/node": "^22.9.0",
-    "@types/qrcode-terminal": "^0.12.2",
-    "@types/uuid": "^10.0.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "@types/bun": "^1.3.0",
+    "typescript": "^5.6.3",
+    "prettier": "^3.3.3",
+    "eslint": "^9.13.0",
+    "typescript-eslint": "^8.12.0"
   }
 }

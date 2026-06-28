@@ -1,7 +1,7 @@
 import fs from "fs";
 import yaml from "js-yaml";
 import path from "path";
-import { AppConfig, ConfigSchema } from "./schema.js";
+import { AppConfig, ConfigSchema } from "./tenantConfigSchema.js";
 
 export function loadConfig(clientId: string): AppConfig {
   // Caminho base para clients: src/clients

@@ -1,12 +1,29 @@
+# deps & build
 node_modules/
 dist/
+.bun/
+*.tsbuildinfo
+
+# env & secrets
 .env
-.DS_Store
-_backup_legacy/
-src/data/tokens/
-src/data/orders/
-src/data/conversations/*
+.env.*.local
+ssl/
+*.pem
+
+# dados / PII (nunca versionar)
+src/data/
+_legacy/data/
+**/data/tokens/
+**/data/orders/
+**/data/conversations/
+
+# logs
+logs/
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+
+# docker volumes locais
+.volumes/
+
+# os
+.DS_Store

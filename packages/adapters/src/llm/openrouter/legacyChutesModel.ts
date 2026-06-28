@@ -1,6 +1,6 @@
 import OpenAI from "openai";
-import { AppConfig } from "../config/schema.js";
-import { logger } from "../utils/logger.js";
+import { AppConfig } from "@sirvase/core";
+import { logger } from "@sirvase/core";
 
 export interface LLMResponse {
   content: string;

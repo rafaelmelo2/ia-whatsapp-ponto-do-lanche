@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { logger } from '../utils/logger.js';
+import { logger } from '../observability/logger.js';
 import { LLMOrderExtraction } from './orderTypes.js';
 
 const OrderExtractionSchema = z.object({

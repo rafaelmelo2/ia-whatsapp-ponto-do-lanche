@@ -1,4 +1,4 @@
-import { logger } from "../utils/logger.js";
+import { logger } from "../observability/logger.js";
 
 export class PromptGuard {
   validate(response: string): { isValid: boolean; reason?: string } {

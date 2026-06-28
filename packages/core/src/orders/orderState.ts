@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { logger } from "../utils/logger.js";
+import { logger } from "../observability/logger.js";
 
 export interface Message {
   role: "user" | "assistant" | "system";

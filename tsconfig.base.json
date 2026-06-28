@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "types": ["bun"],
+    "baseUrl": ".",
+    "paths": {
+      "@sirvase/core": ["packages/core/src/index.ts"],
+      "@sirvase/core/*": ["packages/core/src/*"],
+      "@sirvase/config": ["packages/config/src/index.ts"],
+      "@sirvase/config/*": ["packages/config/src/*"],
+      "@sirvase/adapters": ["packages/adapters/src/index.ts"],
+      "@sirvase/adapters/*": ["packages/adapters/src/*"],
+      "@sirvase/db": ["packages/db/src/index.ts"],
+      "@sirvase/db/*": ["packages/db/src/*"]
+    }
+  }
+}

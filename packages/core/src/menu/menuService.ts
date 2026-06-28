@@ -1,5 +1,5 @@
-import { AppConfig } from "../config/schema.js";
-import { logger } from "../utils/logger.js";
+import { AppConfig } from "../config/tenantConfigSchema.js";
+import { logger } from "../observability/logger.js";
 import { MenuItem } from "./menuTypes.js";
 
 interface CachedMenu {

@@ -9,8 +9,8 @@ import fs from "fs";
 import path from "path";
 import pino from "pino";
 import qrcode from "qrcode-terminal";
-import { logger } from "../utils/logger.js";
-import { IncomingMessage, WhatsAppProvider } from "./provider.js";
+import { logger } from "@sirvase/core";
+import { IncomingMessage, WhatsAppProvider } from "@sirvase/core";
 
 export class BaileysProvider implements WhatsAppProvider {
   private sock: any;
