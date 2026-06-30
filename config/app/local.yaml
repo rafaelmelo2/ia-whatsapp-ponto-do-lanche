@@ -1,0 +1,17 @@
+# Config não-secreta do ambiente LOCAL. Secrets ficam em .env (nunca aqui).
+cors:
+  origins:
+    - http://localhost
+    - http://localhost:3000
+pools:
+  postgres:
+    max: 10
+  redis:
+    max: 10
+llm:
+  model: deepseek/deepseek-r1
+  temperature: 0.3
+  maxTokens: 2048
+queue:
+  name: orders
+  concurrency: 5

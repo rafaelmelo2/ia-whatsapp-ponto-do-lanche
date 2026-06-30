@@ -1,0 +1,9 @@
+# Overrides do ambiente STAGING. DB/Redis não expõem portas ao host (só rede
+# interna do compose). restart=always para resiliência.
+services:
+  postgres:
+    restart: always
+  redis:
+    restart: always
+  api:
+    restart: always

@@ -27,3 +27,6 @@ npm-debug.log*
 
 # os
 .DS_Store
+
+# Backups de DB (P0.4)
+backups/

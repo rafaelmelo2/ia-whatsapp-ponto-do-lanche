@@ -1,0 +1,13 @@
+# Ingress GATEWAY — Caddy em 0.0.0.0:80 (HTTP), atrás de um LB/edge externo
+# que termina TLS. Use quando o TLS é responsabilidade de outra camada.
+services:
+  proxy:
+    image: caddy:2-alpine
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "80:80"
+    volumes:
+      - ../services/proxy/Caddyfile.gateway:/etc/caddy/Caddyfile:ro
+    restart: unless-stopped

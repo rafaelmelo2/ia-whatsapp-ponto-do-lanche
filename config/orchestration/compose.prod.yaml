@@ -1,0 +1,8 @@
+# Overrides do ambiente PROD. Sem portas de DB expostas; restart=always.
+services:
+  postgres:
+    restart: always
+  redis:
+    restart: always
+  api:
+    restart: always

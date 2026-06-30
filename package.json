@@ -11,6 +11,9 @@
   "engines": {
     "bun": ">=1.3.0"
   },
+  "overrides": {
+    "libsignal": "npm:libsignal@6.0.0"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "bun test",
@@ -28,6 +31,7 @@
   },
   "devDependencies": {
     "@types/bun": "^1.3.0",
+    "@eslint/js": "^9.13.0",
     "typescript": "^5.6.3",
     "prettier": "^3.3.3",
     "eslint": "^9.13.0",

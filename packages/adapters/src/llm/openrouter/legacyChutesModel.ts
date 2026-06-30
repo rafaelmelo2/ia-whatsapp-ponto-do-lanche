@@ -55,7 +55,7 @@ export class LLMModel {
       // Extrai o bloco <think>...</think> se existir
       const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
       if (thinkMatch) {
-        thought = thinkMatch[1].trim();
+        thought = thinkMatch[1]?.trim();
         content = content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
       }
 

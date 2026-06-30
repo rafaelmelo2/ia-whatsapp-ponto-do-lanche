@@ -1,0 +1,16 @@
+# Config não-secreta do ambiente PROD. Secrets ficam em .env (nunca aqui).
+cors:
+  origins:
+    - https://sirvase.app
+pools:
+  postgres:
+    max: 30
+  redis:
+    max: 30
+llm:
+  model: deepseek/deepseek-r1
+  temperature: 0.3
+  maxTokens: 2048
+queue:
+  name: orders
+  concurrency: 20

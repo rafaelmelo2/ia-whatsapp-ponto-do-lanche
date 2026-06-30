@@ -1,0 +1,16 @@
+# Config não-secreta do ambiente STAGING. Secrets ficam em .env (nunca aqui).
+cors:
+  origins:
+    - https://staging.sirvase.app
+pools:
+  postgres:
+    max: 20
+  redis:
+    max: 20
+llm:
+  model: deepseek/deepseek-r1
+  temperature: 0.3
+  maxTokens: 2048
+queue:
+  name: orders
+  concurrency: 10

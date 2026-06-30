@@ -1,0 +1,12 @@
+# Ingress LOOPBACK (dev) — Caddy só em 127.0.0.1:8080, HTTP puro. Sem TLS.
+services:
+  proxy:
+    image: caddy:2-alpine
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "127.0.0.1:8080:80"
+    volumes:
+      - ../services/proxy/Caddyfile.loopback:/etc/caddy/Caddyfile:ro
+    restart: unless-stopped

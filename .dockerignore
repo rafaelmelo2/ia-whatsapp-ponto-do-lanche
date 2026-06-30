@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+.git
+_legacy
+src/data
+**/data/tokens
+**/data/orders
+**/data/conversations
+backups
+*.log
+.env
+.env.*.local

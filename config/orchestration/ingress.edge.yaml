@@ -1,0 +1,22 @@
+# Ingress EDGE — Caddy exposto à internet, termina TLS com ACME automático
+# (HTTP:80 p/ desafio + redirect, HTTPS:443). Defina DOMAIN no .env.
+services:
+  proxy:
+    image: caddy:2-alpine
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../services/proxy/Caddyfile.edge:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    restart: unless-stopped
+
+volumes:
+  caddydata:
+  caddyconfig:

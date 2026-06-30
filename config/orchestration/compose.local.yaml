@@ -1,0 +1,13 @@
+# Overrides do ambiente LOCAL. Expõe pg/redis no loopback do host p/ debug
+# (psql/redis-cli direto). Portas altas p/ não colidir com serviços nativos do
+# host (ex.: um Postgres em 5432). Nunca expor assim em staging/prod.
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:15432:5432"
+  redis:
+    ports:
+      - "127.0.0.1:16379:6379"
+  api:
+    environment:
+      LOG_LEVEL: debug

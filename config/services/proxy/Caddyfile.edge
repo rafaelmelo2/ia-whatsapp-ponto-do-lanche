@@ -1,0 +1,10 @@
+# Edge — TLS automático (ACME) p/ $DOMAIN. /webhook → webhook; resto → api.
+{$DOMAIN:localhost} {
+	encode gzip
+	handle /webhook* {
+		reverse_proxy webhook:3001
+	}
+	handle {
+		reverse_proxy api:3000
+	}
+}

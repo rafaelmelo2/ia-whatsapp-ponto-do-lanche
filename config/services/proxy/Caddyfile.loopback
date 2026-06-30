@@ -1,0 +1,10 @@
+# Loopback (dev) — HTTP puro em :80. /webhook → serviço webhook; resto → api.
+:80 {
+	encode gzip
+	handle /webhook* {
+		reverse_proxy webhook:3001
+	}
+	handle {
+		reverse_proxy api:3000
+	}
+}

@@ -1,0 +1,10 @@
+# Gateway — HTTP :80 atrás de LB/edge externo. /webhook → webhook; resto → api.
+:80 {
+	encode gzip
+	handle /webhook* {
+		reverse_proxy webhook:3001
+	}
+	handle {
+		reverse_proxy api:3000
+	}
+}

@@ -1,0 +1,75 @@
+# Compose base do Sirvase. NÃO duplicar config por ambiente aqui — os includes
+# abaixo trazem os overrides certos conforme ENVIRONMENT/INGRESS_MODE do .env.
+# Subir: `docker compose up -d` (lê .env automaticamente). Nenhum `cp` necessário.
+name: sirvase
+
+include:
+  - config/orchestration/compose.${ENVIRONMENT:-local}.yaml
+  - config/orchestration/ingress.${INGRESS_MODE:-loopback}.yaml
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sirvase}
+      POSTGRES_USER: ${POSTGRES_USER:-sirvase}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD é obrigatório (veja .env)}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sirvase} -d ${POSTGRES_DB:-sirvase}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command:
+      [
+        "redis-server",
+        "--requirepass",
+        "${REDIS_PASSWORD:?REDIS_PASSWORD é obrigatório (veja .env)}",
+        "--appendonly",
+        "yes"
+      ]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_ENTRY: services/api/src/index.ts
+    env_file: .env
+    environment:
+      PORT: 3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  webhook:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_ENTRY: services/webhook/src/index.ts
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
