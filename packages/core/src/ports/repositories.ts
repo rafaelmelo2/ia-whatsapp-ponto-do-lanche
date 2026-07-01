@@ -65,6 +65,38 @@ export interface OrderRepository {
   updateStatus(tenantId: string, id: string, status: OrderRow["status"]): Promise<OrderRow | null>;
 }
 
+// ── User (auth). findByEmail NÃO é escopado: o login acha o user antes de saber o
+//    tenant; o tenant_id vem no próprio row. Hash de senha é responsabilidade do
+//    serviço de auth (o repo recebe/entrega o hash pronto, nunca a senha em claro). ──
+export interface UserRow {
+  id: string;
+  email: string;
+  name: string;
+  role: "admin" | "client";
+  tenantId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** Como UserRow, mas carrega o hash — só usado internamente pela verificação de login. */
+export interface UserWithSecret extends UserRow {
+  passwordHash: string;
+}
+
+export interface CreateUserInput {
+  email: string;
+  passwordHash: string;
+  name: string;
+  role?: UserRow["role"];
+  tenantId: string;
+}
+
+export interface UserRepository {
+  findByEmail(email: string): Promise<UserWithSecret | null>;
+  findById(id: string): Promise<UserRow | null>;
+  create(input: CreateUserInput): Promise<UserRow>;
+}
+
 // ── Session (escopado por tenant_id; chave natural (tenant_id, phone_number)) ──
 export interface SessionRow {
   id: string;

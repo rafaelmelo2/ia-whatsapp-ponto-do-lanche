@@ -5,7 +5,7 @@
 > "PRÓXIMO PASSO" abaixo. Regras persistentes para qualquer agente Cursor:
 > `.cursor/rules/sirvase-*.mdc`. Não commitar sem o usuário pedir.
 
-Última atualização: 2026-07-01 (sessão 3).
+Última atualização: 2026-07-01 (sessão 3) — Épico 1 completo.
 
 ## Decisões travadas (não reabrir)
 - **Runtime/workspaces: Bun** (1.3.9). NÃO npm/pnpm. Workspaces: `["packages/*","services/*"]` (apps/* entram no Épico 7).
@@ -124,16 +124,20 @@ base real. Lição: commitar ao fim de cada fase (o usuário já autorizou commi
 - **DoD atingido**: `bun test` 9/9 (4 antigos + 5 isolamento); typecheck limpo; lint 0 erros; base fica intacta (1 tenant/0 orders/0 sessions) após o teste.
 - ⚠️ Se um run do teste falhar no meio, o `afterAll` pode não rodar e deixar tenants "Tenant A/B Teste" órfãos — limpar com `DELETE FROM tenants WHERE store_name LIKE '%Teste%'`.
 
-### P1.4 — Auth JWT própria — ⬜
-- Signup/login de `users`. Hash: **`Bun.password.hash/verify`** (argon2id nativo — já usado no seed). JWT: avaliar `jose` (ESM, sem nativo). Middleware auth + escopo `tenant_id`; `admin` vê tudo, `client` só o próprio tenant.
-- Pronto quando: login devolve JWT; rota protegida rejeita sem token e filtra por tenant.
+### P1.4 — Auth JWT própria — ✅ FEITO
+- **JWT hand-rolled HS256** em `services/api/src/auth/jwt.ts` com Web Crypto (`crypto.subtle`) — **sem dep nova** (decisão: respeita regra do claude.md de evitar lib não-trivial; verificação HMAC é constant-time; `alg` FIXO em HS256 e checado na verify → fecha alg-confusion/`none`). `signToken` (TTL 7d, claims sub/tenantId/role) + `verifyToken` (retorna payload ou null; valida assinatura E expiração).
+- **`UserRepository` port** (core) + **`PgUserRepository`** (db): `findByEmail` (NÃO escopado — login acha o user antes do tenant; devolve `UserWithSecret` c/ hash só p/ verificação interna), `findById`, `create`. Hash NUNCA vaza p/ fora do serviço.
+- **`AuthService`** (`services/api/src/auth/service.ts`): `signup`/`login` com `Bun.password.hash/verify` (argon2id, = seed). `AuthError(status,msg)`. Login com senha errada/user inexistente → 401 genérico.
+- **`authenticate(req)`** (middleware): extrai Bearer, valida, devolve `{userId,tenantId,role}` ou null.
+- **`createRouter(deps)`** (`router.ts`): handler puro `(req)=>Response` com deps injetadas (testável sem subir servidor). Rotas: `GET /health` (público), `POST /auth/login` (público), `POST /auth/signup` (protegido, **só admin** provisiona), `GET /me` (protegido), `GET /orders` (protegido, **escopado ao tenant do token**). `index.ts` faz o wiring real (repos Pg sobre pool compartilhado, porta `settings.app.port`). Api ganhou dep `@sirvase/db`.
+- **Teste `services/api/test/auth.test.ts`** (integração, skip sem DB): login→JWT (3 partes, sem hash no user); senha errada→401; rota protegida sem token→401; token inválido→401; `/me`→contexto do tenant; `/orders`→só o tenant do token; signup com token client→403.
+- **DoD atingido + verificado**: `bun test` 16/16 (4+5+7); typecheck limpo; lint 0 erros. **Smoke E2E real** (api local :3999 sobre pg loopback): `/orders` sem token→401; login do admin do seed (`admin@pontodolanche.com`/`admin123`)→JWT; `/me`→tenantId do Ponto do Lanche + role admin; `/orders` com token→filtrado.
+- ⚠️ `admin` "vê tudo" (cross-tenant) fica p/ o painel (Épico 7); hoje `/orders` sempre escopa ao tenant do token (TODO marcado no router). Signup público não existe de propósito (só admin cria users).
+- ⚠️ Container `api` em execução ainda tem o stub do Épico 0 — **rebuildar** (`docker compose up -d --build api`) p/ subir o código de auth no Docker.
 
 ## PRÓXIMO PASSO (começar exatamente aqui)
-**Épico 1: P1.1 ✅, P1.2 ✅, P1.3 ✅. Falta só P1.4 (auth JWT) para fechar o Épico 1.**
-P1.4:
-1. `UserRepository` port (core) + `PgUserRepository` (db): `findByEmail`, `create`. Diferente dos outros — login precisa achar user por email ANTES de saber o tenant, então `findByEmail` NÃO é escopado; o `tenant_id` vem no próprio row do user.
-2. Serviço de auth (onde? provavelmente `services/api/src/` ou um `packages/auth`): signup/login com `Bun.password.hash/verify` (argon2id, já usado no seed) + emissão de JWT assinado com `settings.security.jwtSecret`. Avaliar `jose` p/ JWT (ESM, sem nativo) — decisão de lib nova, ok registrar.
-3. Middleware de auth na `services/api` (hoje é um `Bun.serve` cru com `/health`): valida Bearer JWT, injeta `{ userId, tenantId, role }` no contexto. `admin` vê tudo; `client` filtra por `tenant_id`.
-4. DoD: login devolve JWT; rota protegida rejeita sem token (401) e filtra por tenant.
-- **Commit P1.3 pendente** (ports/repos/teste + claude.md + PROGRESSO). Usuário faz o push. Commitar só quando pedir.
-- Stack local de pé (`docker compose ps`). Postgres loopback `127.0.0.1:15432`. Rodar teste de integração do host: `bun test packages/db/`.
+**🎉 ÉPICO 1 COMPLETO (P1.1–P1.4 ✅).** Banco + migrations + auth JWT + isolamento multi-tenant prontos e testados (16/16). Próximo é o **Épico 2 — Core modular: portas e adaptadores** (ver `PLANO_EXECUCAO.md` linha ~184).
+- **Commit P1.4 pendente** (só quando o usuário pedir; ele faz o push). Inclui: `packages/core/src/ports/repositories.ts` (UserRepository), `packages/db/src/repositories/userRepo.ts` + barrel, `services/api/src/{index,router,auth/*}.ts`, `services/api/test/auth.test.ts`, `services/api/package.json`, `bun.lock`, PROGRESSO.
+- **Antes de seguir p/ Épico 2**: rebuildar o container api p/ subir o código de auth (`docker compose up -d --build api`). Opcional agora — os testes já provam o código.
+- Stack local de pé (`docker compose ps`). Postgres loopback `127.0.0.1:15432`. Testes de integração do host: `bun test` (auto-skip se pg off). Login de dev do seed: `admin@pontodolanche.com` / `admin123`.
+- Épico 2 (resumo do plano): extrair o pipeline de uma mensagem para `packages/core/pipeline/`, formalizar ports `LlmProvider`/`MenuSource`/`PaymentProvider` com impl real + **mock** cada, wiring trocável por 1 linha. Reaproveitar orderParser/promptBuilder/guard já em core.

@@ -65,6 +65,7 @@
       "dependencies": {
         "@sirvase/config": "workspace:*",
         "@sirvase/core": "workspace:*",
+        "@sirvase/db": "workspace:*",
       },
     },
     "services/webhook": {
