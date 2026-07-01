@@ -116,20 +116,24 @@ base real. Lição: commitar ao fim de cada fase (o usuário já autorizou commi
 - `db/seed.ts` idempotente (`ON CONFLICT DO NOTHING`): tenant **Ponto do Lanche** (UUID fixo `a278e80f-…`, hamburgueria, `cardapio_source=external`, `config jsonb` completo herdado do `_legacy/ponto-do-lanche.config.yaml`) + user **admin@pontodolanche.com** (role admin, hash argon2id via `Bun.password`; senha dev `admin123`, override por `SEED_ADMIN_PASSWORD`).
 - **DoD atingido + verificado**: `db:migrate:status` mostra 9/9 aplicadas; `db:seed` roda sem duplicar (tenants=1, users=1); **diff de `pg_dump --schema-only` da base real vs. banco recriado do zero = IDÊNTICOS**. typecheck limpo, test 4/4, lint 0 erros.
 
-### P1.3 — Isolamento por tenant na camada de repositório — ⬜ PRÓXIMO
-- Repos em `packages/adapters/src/db/` implementando ports `*Repository` (definir em `packages/core/src/ports/`). Todo método recebe `tenant_id` obrigatório e injeta na query (`WHERE tenant_id = $1`).
-- RLS Postgres **opcional** (decisão a registrar no `claude.md`): sem RLS, barreira é disciplina de repo — provar por teste.
-- Pronto quando: teste prova que repo de um tenant nunca lê linha de outro.
+### P1.3 — Isolamento por tenant na camada de repositório — ✅ FEITO
+- **Ports em `packages/core/src/ports/repositories.ts`** (exportados no barrel do core): `TenantRepository` (raiz, NÃO escopado — `findById`/`findByPhoneNumberId` p/ roteamento), `OrderRepository` e `SessionRepository` (escopados: `tenantId` é sempre o 1º arg). Row types com camelCase.
+- **Impl. Postgres em `packages/db/src/repositories/`** (`Pg{Tenant,Order,Session}Repository`), NÃO em adapters — segue a decisão "@sirvase/db = migrations/repos". `sql` **injetável no construtor** (default = pool compartilhado) → testável sem mexer no global. Repos escopados injetam `WHERE tenant_id = $1` em toda query. Mapeamento snake→camel + `parseJson`/`asObject` (jsonb volta como **texto** no driver Bun.SQL, precisa `JSON.parse`).
+- **RLS DESLIGADO** por ora (decisão registrada no `claude.md §3`): barreira = disciplina de repo, provada por teste. Reavaliar no Épico 6.
+- **Teste `packages/db/test/tenantIsolation.test.ts`** (integração, conecta no loopback `127.0.0.1:15432`; `describe.skipIf(!dbUp)` pula gracioso se pg inacessível → `bun test` fica verde sem DB). Prova: `listByTenant` só devolve do próprio tenant; `findById`/`updateStatus` cross-tenant → `null`/0 linhas; sessions com MESMO phone em tenants diferentes ficam isoladas. Cria 2 tenants descartáveis (`randomUUIDv7`) e limpa no `afterAll` (FK CASCADE).
+- **DoD atingido**: `bun test` 9/9 (4 antigos + 5 isolamento); typecheck limpo; lint 0 erros; base fica intacta (1 tenant/0 orders/0 sessions) após o teste.
+- ⚠️ Se um run do teste falhar no meio, o `afterAll` pode não rodar e deixar tenants "Tenant A/B Teste" órfãos — limpar com `DELETE FROM tenants WHERE store_name LIKE '%Teste%'`.
 
 ### P1.4 — Auth JWT própria — ⬜
 - Signup/login de `users`. Hash: **`Bun.password.hash/verify`** (argon2id nativo — já usado no seed). JWT: avaliar `jose` (ESM, sem nativo). Middleware auth + escopo `tenant_id`; `admin` vê tudo, `client` só o próprio tenant.
 - Pronto quando: login devolve JWT; rota protegida rejeita sem token e filtra por tenant.
 
 ## PRÓXIMO PASSO (começar exatamente aqui)
-**Épico 1: P1.1 ✅, P1.2 ✅ (recuperados e verificados). Seguir no P1.3.**
-1. Definir ports `*Repository` em `packages/core/src/ports/` (ex.: `OrderRepository`, `TenantRepository`, `SessionRepository`, `UserRepository`).
-2. Implementar em `packages/adapters/src/db/` usando o `sql` de `@sirvase/db`, com `tenant_id` obrigatório injetado.
-3. Teste `bun:test` provando isolamento cross-tenant (repo do tenant A não lê linha do tenant B).
-4. Registrar decisão RLS on/off no `claude.md`.
-- **Commitar** ao fim (P1.1+P1.2 ainda não commitados — evitar repetir o incidente). Só quando o usuário pedir, como de praxe.
-- Stack local de pé (`docker compose ps`: api/webhook/postgres/redis/proxy Up). Postgres em `127.0.0.1:15432` (ver nota de host vs. container no P1.1).
+**Épico 1: P1.1 ✅, P1.2 ✅, P1.3 ✅. Falta só P1.4 (auth JWT) para fechar o Épico 1.**
+P1.4:
+1. `UserRepository` port (core) + `PgUserRepository` (db): `findByEmail`, `create`. Diferente dos outros — login precisa achar user por email ANTES de saber o tenant, então `findByEmail` NÃO é escopado; o `tenant_id` vem no próprio row do user.
+2. Serviço de auth (onde? provavelmente `services/api/src/` ou um `packages/auth`): signup/login com `Bun.password.hash/verify` (argon2id, já usado no seed) + emissão de JWT assinado com `settings.security.jwtSecret`. Avaliar `jose` p/ JWT (ESM, sem nativo) — decisão de lib nova, ok registrar.
+3. Middleware de auth na `services/api` (hoje é um `Bun.serve` cru com `/health`): valida Bearer JWT, injeta `{ userId, tenantId, role }` no contexto. `admin` vê tudo; `client` filtra por `tenant_id`.
+4. DoD: login devolve JWT; rota protegida rejeita sem token (401) e filtra por tenant.
+- **Commit P1.3 pendente** (ports/repos/teste + claude.md + PROGRESSO). Usuário faz o push. Commitar só quando pedir.
+- Stack local de pé (`docker compose ps`). Postgres loopback `127.0.0.1:15432`. Rodar teste de integração do host: `bun test packages/db/`.

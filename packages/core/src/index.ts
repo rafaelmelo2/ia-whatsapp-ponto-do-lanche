@@ -6,6 +6,7 @@ export * from "./observability/logger.js";
 
 // Ports (interfaces — implementadas em @sirvase/adapters e @sirvase/db)
 export * from "./ports/whatsapp.js";
+export * from "./ports/repositories.js";
 
 // Config de tenant (negócio, não-infra)
 export * from "./config/tenantConfigSchema.js";

@@ -1,0 +1,86 @@
+// Ports de persistência (interfaces). Implementados em @sirvase/db (adapters Postgres).
+// REGRA DE ISOLAMENTO (P1.3): todo método que toca uma tabela filha de `tenants`
+// recebe `tenantId` como PRIMEIRO argumento e injeta `WHERE tenant_id = $1` na query.
+// Nenhum repo escopado expõe um caminho que leia/escreva sem o tenant. A barreira é
+// disciplina de repositório, provada por teste (RLS de Postgres fica opcional).
+
+// ── Tenant (raiz — NÃO é escopado por tenant_id; é a própria chave de tenancy) ──
+export interface TenantRow {
+  id: string;
+  storeName: string;
+  storeType: string | null;
+  catalogApiUrl: string | null;
+  pixKey: string | null;
+  systemPromptPersonality: string | null;
+  config: Record<string, unknown>;
+  active: boolean;
+  waPhoneNumberId: string | null;
+  wabaId: string | null;
+  status: "trial" | "active" | "past_due" | "suspended";
+  plan: string | null;
+  cardapioSource: "internal" | "external";
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TenantRepository {
+  findById(id: string): Promise<TenantRow | null>;
+  /** Roteamento de entrada: resolve o tenant pelo phone_number_id da Cloud API. */
+  findByPhoneNumberId(waPhoneNumberId: string): Promise<TenantRow | null>;
+}
+
+// ── Order (escopado por tenant_id) ─────────────────────────────────────────
+export interface OrderRow {
+  id: string;
+  tenantId: string;
+  customerPhone: string;
+  items: unknown;
+  total: number;
+  status: "pending" | "confirmed" | "preparing" | "delivering" | "completed" | "cancelled";
+  deliveryNeeded: boolean;
+  address: string | null;
+  paymentMethod: string | null;
+  source: "bot" | "painel";
+  idempotencyKey: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateOrderInput {
+  customerPhone: string;
+  items: unknown;
+  total: number;
+  status?: OrderRow["status"];
+  deliveryNeeded?: boolean;
+  address?: string | null;
+  paymentMethod?: string | null;
+  source?: OrderRow["source"];
+  idempotencyKey?: string | null;
+}
+
+export interface OrderRepository {
+  create(tenantId: string, input: CreateOrderInput): Promise<OrderRow>;
+  findById(tenantId: string, id: string): Promise<OrderRow | null>;
+  listByTenant(tenantId: string, limit?: number): Promise<OrderRow[]>;
+  updateStatus(tenantId: string, id: string, status: OrderRow["status"]): Promise<OrderRow | null>;
+}
+
+// ── Session (escopado por tenant_id; chave natural (tenant_id, phone_number)) ──
+export interface SessionRow {
+  id: string;
+  tenantId: string;
+  phoneNumber: string;
+  context: Record<string, unknown>;
+  lastActivity: Date;
+  createdAt: Date;
+}
+
+export interface SessionRepository {
+  getByPhone(tenantId: string, phoneNumber: string): Promise<SessionRow | null>;
+  /** Upsert por (tenant_id, phone_number); atualiza context e last_activity. */
+  upsert(
+    tenantId: string,
+    phoneNumber: string,
+    context: Record<string, unknown>
+  ): Promise<SessionRow>;
+}

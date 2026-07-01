@@ -64,6 +64,11 @@ um pedido pontual e estas rules, **pare e pergunte** — não quebre a arquitetu
 - Isolamento: repositório injeta `tenant_id` em toda query. **Se ligar RLS**, use role de app
   não-privilegiada + `SET app.tenant_id` por transação; **se a app usar role privilegiada, RLS
   não protege** — nesse caso o isolamento é disciplina de repositório, e isso precisa de teste.
+- **Decisão (P1.3): RLS DESLIGADO por ora.** A barreira é disciplina de repositório: todo repo
+  escopado recebe `tenantId` como 1º argumento e injeta `WHERE tenant_id = $1` (ports em
+  `@sirvase/core/ports/repositories`, impl. `Pg*Repository` em `@sirvase/db`). Provado por
+  `packages/db/test/tenantIsolation.test.ts` (leitura/escrita cross-tenant → null/0 linhas).
+  Reavaliar RLS no Épico 6 (hardening). Ao ligar, criar role app não-privilegiada nas migrations.
 - PII (telefone, pedido) **nunca** versionada no git. `src/data/*.json` legado não entra no novo repo.
 
 ---
