@@ -55,6 +55,7 @@
       "name": "@sirvase/db",
       "version": "0.1.0",
       "dependencies": {
+        "@sirvase/config": "workspace:*",
         "@sirvase/core": "workspace:*",
       },
     },

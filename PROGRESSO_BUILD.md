@@ -5,7 +5,7 @@
 > "PRÓXIMO PASSO" abaixo. Regras persistentes para qualquer agente Cursor:
 > `.cursor/rules/sirvase-*.mdc`. Não commitar sem o usuário pedir.
 
-Última atualização: 2026-06-28 (sessão 2).
+Última atualização: 2026-07-01 (sessão 3).
 
 ## Decisões travadas (não reabrir)
 - **Runtime/workspaces: Bun** (1.3.9). NÃO npm/pnpm. Workspaces: `["packages/*","services/*"]` (apps/* entram no Épico 7).
@@ -85,13 +85,51 @@ Feito:
 - Validado local: GET token certo→challenge; token errado→403; POST simulado→200+log. Falta só credencial real da Meta (`WHATSAPP_ACCESS_TOKEN`+`WHATSAPP_PHONE_NUMBER_ID`) + túnel p/ eco real.
 - ⚠️ Ainda FALTA do Épico 4 completo: validação `X-Hub-Signature-256` (TODO no código), fila/idempotência, LLM, persistência. Isto é só a casca de teste.
 
-## PRÓXIMO PASSO (começar exatamente aqui)
-**Épico 0 COMPLETO (P0.1–P0.5 ✅).** Stack roda local em `http://127.0.0.1:8080`.
-Pendências/notas antes do Épico 1:
-- Nada commitado ainda (aguardando o usuário pedir). `git add` precisa incluir: compose/Dockerfile/.dockerignore, config/orchestration/*, config/services/proxy/*, config/app/*, scripts/*, packages/config/src/*, packages/core/test/*, services/*/src/*, eslint/prettier, package.json/bun.lock, PROGRESSO_BUILD.md.
-- Porta local = **8080** (decidido pelo usuário). Outros containers docker da máquina (nexarena) foram parados p/ focar no sirvase.
-- Começar **Épico 1** conforme `PLANO_EXECUCAO.md` (auth/JWT + multi-tenant).
-
 ## Como validar o Épico 0 (DoD agregado) — ✅ TUDO VERDE
 - `bun install` ok · `bun run typecheck` limpo · `bun test` 4/4 · `bun run lint` 0 erros ·
 - `docker compose up -d` sobe postgres+redis+api+proxy saudáveis · `curl http://127.0.0.1:8080/health` → ok · sem nenhum `cp` de config.
+- **Commitado em `51d9f4a`** (branch `feat/biggest-refatoration`, já no origin): "feat: completa Épico 0 …".
+
+---
+
+## Status por fase do Épico 1
+
+### ⚠️ Incidente de recuperação (sessão 3, 2026-07-01)
+O trabalho de P1.1+P1.2 tinha sido feito na sessão 2 mas **não commitado**; o working
+tree foi limpo (voltou a `51d9f4a`) e os arquivos-fonte (`packages/db/src/`,
+`db/migrations/`, `db/seed.ts`, scripts no root) se perderam. **O banco sobreviveu**
+(volume Docker `pgdata`): as 9 migrations seguem aplicadas em `schema_migrations` e o
+seed intacto. Reconstruí os arquivos **fiéis ao banco** (fonte da verdade) e **provei
+por diff** que `migrate up` do zero gera schema byte-a-byte idêntico ao `pg_dump` da
+base real. Lição: commitar ao fim de cada fase (o usuário já autorizou commits nesta linha).
+
+### P1.1 — Runner de migrations SQL — ✅ FEITO
+- **`Bun.SQL` nativo** (driver Postgres embutido no Bun), sem `pg`/ORM. `sql.begin(tx=>...)` transação; `sql.unsafe(q, params)` com `$1`; `sql.close()`.
+- `packages/db/src/client.ts` (pool via `@sirvase/config`), `migrate.ts` (CLI `up|down|status`), `index.ts` (barrel). `packages/db/package.json` ganhou dep `@sirvase/config`.
+- Convenção: `db/migrations/NNNN_nome.up.sql` + `.down.sql`. Tabela `schema_migrations(id,name unique,applied_at)` auto-criada. `up` aplica pendentes (cada uma em transação); `down` reverte só a última; `status` lista ✓/·.
+- Scripts root: `db:migrate:{up,down,status}` + `db:seed`.
+- ⚠️ Do **host** (fora do container), `.env` tem `POSTGRES_HOST=postgres` (só resolve na rede do compose). Rodar com override: `POSTGRES_HOST=127.0.0.1 POSTGRES_PORT=15432 bun run db:migrate:up`.
+
+### P1.2 — Schema base evoluído do atual — ✅ FEITO
+- 9 migrations em `db/migrations/` (todas aplicadas no pg local): `0001_create_tenants`, `0002_create_users`, `0003_create_orders`, `0004_create_sessions`, `0005_create_processed_messages`, `0006_create_tenant_secrets`, `0007_create_subscriptions`, `0008_create_menu_items`, `0009_create_legacy_tables` (leads + n8n_chat_histories).
+- Design real (mais rico que o stub original): FKs `tenant_id … ON DELETE CASCADE` em tudo; índices por tenant (`idx_*`); CHECKs de enum (status/role/source/cardapio_source); `orders` tem `customer_phone`/`delivery_needed`/`address`/`payment_method`/`idempotency_key UNIQUE`; `sessions` UNIQUE `(tenant_id,phone_number)`; `tenant_secrets` UNIQUE `(tenant_id,key)`; `subscriptions` UNIQUE por tenant + campos de gateway.
+- `db/seed.ts` idempotente (`ON CONFLICT DO NOTHING`): tenant **Ponto do Lanche** (UUID fixo `a278e80f-…`, hamburgueria, `cardapio_source=external`, `config jsonb` completo herdado do `_legacy/ponto-do-lanche.config.yaml`) + user **admin@pontodolanche.com** (role admin, hash argon2id via `Bun.password`; senha dev `admin123`, override por `SEED_ADMIN_PASSWORD`).
+- **DoD atingido + verificado**: `db:migrate:status` mostra 9/9 aplicadas; `db:seed` roda sem duplicar (tenants=1, users=1); **diff de `pg_dump --schema-only` da base real vs. banco recriado do zero = IDÊNTICOS**. typecheck limpo, test 4/4, lint 0 erros.
+
+### P1.3 — Isolamento por tenant na camada de repositório — ⬜ PRÓXIMO
+- Repos em `packages/adapters/src/db/` implementando ports `*Repository` (definir em `packages/core/src/ports/`). Todo método recebe `tenant_id` obrigatório e injeta na query (`WHERE tenant_id = $1`).
+- RLS Postgres **opcional** (decisão a registrar no `claude.md`): sem RLS, barreira é disciplina de repo — provar por teste.
+- Pronto quando: teste prova que repo de um tenant nunca lê linha de outro.
+
+### P1.4 — Auth JWT própria — ⬜
+- Signup/login de `users`. Hash: **`Bun.password.hash/verify`** (argon2id nativo — já usado no seed). JWT: avaliar `jose` (ESM, sem nativo). Middleware auth + escopo `tenant_id`; `admin` vê tudo, `client` só o próprio tenant.
+- Pronto quando: login devolve JWT; rota protegida rejeita sem token e filtra por tenant.
+
+## PRÓXIMO PASSO (começar exatamente aqui)
+**Épico 1: P1.1 ✅, P1.2 ✅ (recuperados e verificados). Seguir no P1.3.**
+1. Definir ports `*Repository` em `packages/core/src/ports/` (ex.: `OrderRepository`, `TenantRepository`, `SessionRepository`, `UserRepository`).
+2. Implementar em `packages/adapters/src/db/` usando o `sql` de `@sirvase/db`, com `tenant_id` obrigatório injetado.
+3. Teste `bun:test` provando isolamento cross-tenant (repo do tenant A não lê linha do tenant B).
+4. Registrar decisão RLS on/off no `claude.md`.
+- **Commitar** ao fim (P1.1+P1.2 ainda não commitados — evitar repetir o incidente). Só quando o usuário pedir, como de praxe.
+- Stack local de pé (`docker compose ps`: api/webhook/postgres/redis/proxy Up). Postgres em `127.0.0.1:15432` (ver nota de host vs. container no P1.1).

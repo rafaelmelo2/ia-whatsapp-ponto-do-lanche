@@ -11,6 +11,7 @@
     "./*": "./src/*"
   },
   "dependencies": {
-    "@sirvase/core": "workspace:*"
+    "@sirvase/core": "workspace:*",
+    "@sirvase/config": "workspace:*"
   }
 }

@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS n8n_chat_histories;
+DROP TABLE IF EXISTS leads;
