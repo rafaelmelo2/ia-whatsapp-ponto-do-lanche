@@ -65,8 +65,10 @@
       "name": "@sirvase/webhook",
       "version": "0.1.0",
       "dependencies": {
+        "@sirvase/adapters": "workspace:*",
         "@sirvase/config": "workspace:*",
         "@sirvase/core": "workspace:*",
+        "@sirvase/db": "workspace:*",
       },
     },
     "services/worker": {

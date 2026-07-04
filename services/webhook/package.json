@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@sirvase/config": "workspace:*",
-    "@sirvase/core": "workspace:*"
+    "@sirvase/core": "workspace:*",
+    "@sirvase/adapters": "workspace:*",
+    "@sirvase/db": "workspace:*"
   }
 }
