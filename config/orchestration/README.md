@@ -41,3 +41,25 @@ Registre a URL `https://<gerada>.trycloudflare.com/webhook` no painel do Meta e
 use o mesmo `WHATSAPP_VERIFY_TOKEN` do `.env`. Para uma URL estável, crie um
 túnel nomeado (`cloudflared tunnel create sirvase-dev`) com `CNAME` no seu
 domínio. Implementação do endpoint `/webhook` vem no Épico 4.
+
+## Evolution API local (dev) — sem túnel, sem VPS
+`ENVIRONMENT=local` sobe um container `evolution` (self-hosted) na mesma rede Docker do
+`webhook` — o webhook dela já sai configurado por env var pra
+`http://webhook:3001/webhook/evolution?token=$EVOLUTION_WEBHOOK_TOKEN`, sem precisar de
+domínio público nem túnel. Reaproveita o Postgres/Redis do stack (banco `evolution`
+dedicado, índice Redis `/1`) — não é dado multi-tenant nosso.
+
+**Passo único** (banco `evolution` não existe ainda no volume `pgdata`):
+```bash
+docker compose exec postgres psql -U ${POSTGRES_USER:-sirvase} -d ${POSTGRES_DB:-sirvase} \
+  -c "CREATE DATABASE evolution;"
+```
+
+Depois `docker compose up -d evolution`, abra `http://127.0.0.1:8081` (manager), crie uma
+instância com nome **igual ao `wa_number` do tenant de teste** (ver `db/seed.ts`), e
+escaneie o QR com o número de teste. Trocar de máquina de desenvolvimento exige repetir
+o QR — a sessão não roda em duas instâncias Evolution ao mesmo tempo.
+
+Produção real usa a Evolution já existente na VPS do usuário — instância nova e isolada,
+nunca a que atende produção via n8n. Decisão completa em `claude.md §4` e
+`PLANO_EXECUCAO.md` Épico 4.

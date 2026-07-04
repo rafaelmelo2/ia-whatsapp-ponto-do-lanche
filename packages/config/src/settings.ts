@@ -37,6 +37,9 @@ const envSchema = z.object({
   WHATSAPP_ACCESS_TOKEN: z.string().optional(),
   WHATSAPP_PHONE_NUMBER_ID: z.string().optional(),
   WHATSAPP_GRAPH_VERSION: z.string().default("v22.0"),
+  EVOLUTION_API_URL: z.string().url().optional(),
+  EVOLUTION_API_KEY: z.string().optional(),
+  EVOLUTION_WEBHOOK_TOKEN: z.string().optional(),
   ASAAS_API_KEY: z.string().optional()
 });
 
@@ -157,6 +160,12 @@ function build() {
       accessToken: env.WHATSAPP_ACCESS_TOKEN,
       phoneNumberId: env.WHATSAPP_PHONE_NUMBER_ID,
       graphVersion: env.WHATSAPP_GRAPH_VERSION
+    }),
+
+    evolution: Object.freeze({
+      apiUrl: env.EVOLUTION_API_URL,
+      apiKey: env.EVOLUTION_API_KEY,
+      webhookToken: env.EVOLUTION_WEBHOOK_TOKEN
     }),
 
     asaas: Object.freeze({

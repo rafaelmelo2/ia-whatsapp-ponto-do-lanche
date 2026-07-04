@@ -1,6 +1,13 @@
 # Overrides do ambiente LOCAL. Expõe pg/redis no loopback do host p/ debug
 # (psql/redis-cli direto). Portas altas p/ não colidir com serviços nativos do
 # host (ex.: um Postgres em 5432). Nunca expor assim em staging/prod.
+#
+# `evolution`: Evolution API self-hosted SÓ em dev (nunca staging/prod — produção usa
+# a instância já existente na VPS do usuário). Reaproveita o Postgres/Redis do stack
+# (banco `evolution` dedicado, índice Redis /1 — dado dela, não é multi-tenant nosso).
+# Webhook já sai configurado pra rede interna Docker (http://webhook:3001/...) — sem
+# domínio público nem túnel. Passo único antes do primeiro `up`: criar o banco
+# `evolution` no Postgres (ver config/orchestration/README.md).
 services:
   postgres:
     ports:
@@ -11,3 +18,29 @@ services:
   api:
     environment:
       LOG_LEVEL: debug
+  evolution:
+    image: atendai/evolution-api:v2.2.3
+    environment:
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:?EVOLUTION_API_KEY é obrigatório pra subir a Evolution local}
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://${POSTGRES_USER:-sirvase}:${POSTGRES_PASSWORD}@postgres:5432/evolution
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_REDIS_URI: redis://:${REDIS_PASSWORD}@redis:6379/1
+      CACHE_REDIS_PREFIX_KEY: evolution
+      WEBHOOK_GLOBAL_ENABLED: "true"
+      WEBHOOK_GLOBAL_URL: http://webhook:3001/webhook/evolution?token=${EVOLUTION_WEBHOOK_TOKEN}
+      WEBHOOK_EVENTS_MESSAGES_UPSERT: "true"
+    ports:
+      - "127.0.0.1:8081:8080"
+    volumes:
+      - evolutiondata:/evolution/instances
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  evolutiondata:
