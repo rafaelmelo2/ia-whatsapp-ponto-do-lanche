@@ -30,3 +30,6 @@ npm-debug.log*
 
 # Backups de DB (P0.4)
 backups/
+
+# scratch de execução do subagent-driven-development (briefs/relatórios/ledger)
+.superpowers/

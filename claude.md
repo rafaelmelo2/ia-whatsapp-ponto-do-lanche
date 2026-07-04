@@ -73,13 +73,39 @@ um pedido pontual e estas rules, **pare e pergunte** — não quebre a arquitetu
 
 ---
 
-## 4. WhatsApp Cloud API
+## 4. WhatsApp — dois provedores atrás da mesma porta (Evolution + Cloud API)
 
-- Webhook: verifica `X-Hub-Signature-256`, responde 200 **sempre** e **<5s**. Qualquer trabalho
-  pesado vai para a fila. 200 atrasado faz a Meta reentregar e duplicar.
-- Roteamento por `phone_number_id` → `tenant`. Número desconhecido: descarta com log, não processa.
-- Respeite a **janela de 24h**: fora dela, só template aprovado. Dentro, texto livre.
-- Não recrie heurística anti-ban (delay/typing/spoof) — é Baileys, morreu na migração.
+- Porta `WhatsAppProvider` (core) é **webhook + REST**, não em processo: `parseWebhook(payload):
+  IncomingMessage | null`, `sendText(to, text)`, `markAsRead(to, messageId)`. Sem `initialize`/
+  `onMessage`/typing — isso era o modelo antigo (Baileys em processo). `baileys-legacy` fica só
+  como referência histórica, nunca implementa a porta nova.
+- Dois adapters reais convivem por **rota fixa**, nunca por env var de seleção: `POST
+  /webhook/evolution` sempre usa `EvolutionApiProvider`; `GET/POST /webhook/meta` sempre usa
+  `CloudApiProvider`. O worker/pipeline não sabe nem se importa qual originou a mensagem.
+- **Evolution é o provedor ativo agora** (app da Meta ainda não aprovado); Cloud API fica
+  implementada e testável em paralelo, ativada por tenant quando aprovar.
+- Webhook: responde 200 **sempre** e **<5s**. Qualquer trabalho pesado vai para a fila. 200
+  atrasado faz a Meta reentregar e duplicar (regra vale pros dois provedores, por consistência).
+- Roteamento de tenant é único pros dois: `tenants.wa_number` (E.164, sem "+") é a identidade
+  universal. Instância Evolution é **sempre criada com nome = `wa_number`** do tenant — resolve
+  tenant é `WHERE wa_number = instance`. Na Meta, `wa_phone_number_id` continua como chave
+  técnica exigida pela Graph API pra enviar (o `display_phone_number` do payload normalizado
+  bate com `wa_number`, mas o envio exige o ID — não tem como fugir disso). Número/instância
+  desconhecida: descarta com log, não processa.
+- Autenticação de entrada por provedor: Meta valida `X-Hub-Signature-256`; Evolution não assina
+  payload, então autentica por **token na própria URL do webhook**
+  (`/webhook/evolution?token=...`, de `EVOLUTION_WEBHOOK_TOKEN`), validado antes de processar.
+  Nunca deixar esse POST público sem autenticação.
+- Janela de 24h (resposta livre vs. template aprovado) é regra exclusiva da Meta — Evolution/
+  WhatsApp pessoal não tem essa restrição.
+- Dev local: Evolution roda em container próprio só em `config/orchestration/compose.local.yaml`
+  (nunca staging/prod), reaproveitando Postgres/Redis do stack (banco/índice lógico dedicados —
+  não é dado multi-tenant nosso). Sessão persistida em volume; trocar de máquina de
+  desenvolvimento exige novo QR (a mesma sessão não roda em duas instâncias Evolution
+  simultâneas). Produção real aponta pra Evolution já existente na VPS do usuário, numa
+  **instância nova e isolada** — nunca reusa a instância/número que atende produção real via n8n.
+- Não recrie heurística anti-ban (delay/typing/spoof) em nenhum dos dois — é Baileys por baixo
+  dos dois, mesma lição de antes: morreu na migração.
 
 ---
 

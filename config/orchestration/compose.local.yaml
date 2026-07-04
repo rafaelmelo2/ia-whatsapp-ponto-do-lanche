@@ -19,7 +19,7 @@ services:
     environment:
       LOG_LEVEL: debug
   evolution:
-    image: atendai/evolution-api:v2.2.3
+    image: evoapicloud/evolution-api:v2.3.7
     environment:
       AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:?EVOLUTION_API_KEY é obrigatório pra subir a Evolution local}
       DATABASE_ENABLED: "true"
