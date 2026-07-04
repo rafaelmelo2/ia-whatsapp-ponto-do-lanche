@@ -1,16 +1,18 @@
+// Porta de WhatsApp — webhook + REST (Evolution, Cloud API). Nenhum SDK aqui;
+// implementações reais em @sirvase/adapters. Não é mais o formato antigo em
+// processo (initialize/onMessage/typing) herdado da migração do Baileys — esse
+// modelo morreu com o Baileys (ver claude.md §4).
 export interface IncomingMessage {
-  from: string;
+  from: string; // número do cliente, E.164 sem "+"
   body: string;
   pushName?: string;
   isGroup: boolean;
-  messageId?: string;
+  messageId: string;
 }
 
 export interface WhatsAppProvider {
-  initialize(): Promise<void>;
-  onMessage(handler: (msg: IncomingMessage) => Promise<void>): void;
+  /** Traduz o payload cru do webhook do provedor. `null` se não é mensagem de texto processável. */
+  parseWebhook(payload: unknown): IncomingMessage | null;
   sendText(to: string, text: string): Promise<void>;
-  markAsRead(phone: string, messageId: string): Promise<void>;
-  startTyping(phone: string): Promise<void>;
-  stopTyping(phone: string): Promise<void>;
+  markAsRead(to: string, messageId: string): Promise<void>;
 }
