@@ -53,9 +53,9 @@ const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? "admin123";
 async function seed() {
   await sql.unsafe(
     `INSERT INTO tenants (id, store_name, store_type, catalog_api_url, pix_key,
-        status, plan, cardapio_source, active, config)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, $9::jsonb)
-     ON CONFLICT (id) DO NOTHING`,
+        status, plan, cardapio_source, active, config, wa_number, wa_provider)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, $9::jsonb, $10, $11)
+     ON CONFLICT (id) DO UPDATE SET wa_number = EXCLUDED.wa_number, wa_provider = EXCLUDED.wa_provider`,
     [
       PONTO_DO_LANCHE_ID,
       "Ponto do Lanche",
@@ -65,7 +65,9 @@ async function seed() {
       "trial",
       "mensalidade_fixa",
       "external",
-      JSON.stringify(config)
+      JSON.stringify(config),
+      "5511999999999", // placeholder — troca quando o chip de teste real for provisionado
+      "evolution"
     ]
   );
 
