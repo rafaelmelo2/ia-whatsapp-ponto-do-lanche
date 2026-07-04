@@ -50,6 +50,18 @@ class FakeProvider implements WhatsAppProvider {
   async markAsRead(): Promise<void> {}
 }
 
+/** Simula falha de rede no envio (ex: provedor externo indisponível). */
+class FailingProvider implements WhatsAppProvider {
+  constructor(private readonly fixedMessage: IncomingMessage | null) {}
+  parseWebhook(): IncomingMessage | null {
+    return this.fixedMessage;
+  }
+  async sendText(): Promise<void> {
+    throw new Error("Unable to connect. Is the computer able to access the url?");
+  }
+  async markAsRead(): Promise<void> {}
+}
+
 const INCOMING: IncomingMessage = {
   from: "5511888887777",
   body: "Oi, quero um lanche",
@@ -116,6 +128,24 @@ describe("webhook router — Evolution", () => {
 
     expect(res.status).toBe(200);
     expect(provider.sent).toEqual([]);
+  });
+
+  test("falha ao enviar eco (provedor indisponível): ainda responde 200, não propaga o erro", async () => {
+    const handle = createRouter({
+      tenants: new FakeTenantRepository(fakeTenant()),
+      makeEvolutionProvider: () => new FailingProvider(INCOMING),
+      makeCloudApiProvider: () => new FakeProvider(null),
+      evolutionWebhookToken: "token-secreto"
+    });
+
+    const res = await handle(
+      new Request("http://webhook.test/webhook/evolution?token=token-secreto", {
+        method: "POST",
+        body: JSON.stringify({ event: "messages.upsert", instance: "5511999990001" })
+      })
+    );
+
+    expect(res.status).toBe(200);
   });
 });
 
@@ -215,5 +245,42 @@ describe("webhook router — Meta", () => {
 
     expect(res.status).toBe(200);
     expect(provider.sent).toEqual([{ to: "5511888887777", text: "eco: Oi, quero um lanche" }]);
+  });
+
+  test("falha ao enviar eco (provedor indisponível): ainda responde 200, não propaga o erro", async () => {
+    const appSecret = "app-secret-teste";
+    const body = JSON.stringify({
+      entry: [{ changes: [{ value: { metadata: { phone_number_id: "123456789012345" } } }] }]
+    });
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(appSecret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const sigBytes = new Uint8Array(
+      await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body))
+    );
+    const hex = Array.from(sigBytes)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    const handle = createRouter({
+      tenants: new FakeTenantRepository(fakeTenant({ waPhoneNumberId: "123456789012345" })),
+      makeEvolutionProvider: () => new FakeProvider(null),
+      makeCloudApiProvider: () => new FailingProvider(INCOMING),
+      metaAppSecret: appSecret
+    });
+
+    const res = await handle(
+      new Request("http://webhook.test/webhook/meta", {
+        method: "POST",
+        headers: { "X-Hub-Signature-256": `sha256=${hex}` },
+        body
+      })
+    );
+
+    expect(res.status).toBe(200);
   });
 });

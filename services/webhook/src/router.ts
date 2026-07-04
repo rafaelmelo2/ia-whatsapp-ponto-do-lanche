@@ -80,7 +80,14 @@ async function handleMetaMessage(req: Request, deps: RouterDeps): Promise<Respon
   const msg = provider.parseWebhook(payload);
   if (msg) {
     logger.info("webhook: mensagem Meta recebida", { tenantId: tenant.id, from: msg.from });
-    await provider.sendText(msg.from, `eco: ${msg.body}`);
+    try {
+      await provider.sendText(msg.from, `eco: ${msg.body}`);
+    } catch (err) {
+      logger.error("webhook: falha ao enviar eco via Meta", {
+        tenantId: tenant.id,
+        err: err instanceof Error ? err.message : String(err)
+      });
+    }
   }
 
   return text("EVENT_RECEIVED");
@@ -116,7 +123,14 @@ async function handleEvolutionMessage(req: Request, url: URL, deps: RouterDeps):
   const msg = provider.parseWebhook(payload);
   if (msg) {
     logger.info("webhook: mensagem Evolution recebida", { tenantId: tenant.id, from: msg.from });
-    await provider.sendText(msg.from, `eco: ${msg.body}`);
+    try {
+      await provider.sendText(msg.from, `eco: ${msg.body}`);
+    } catch (err) {
+      logger.error("webhook: falha ao enviar eco via Evolution", {
+        tenantId: tenant.id,
+        err: err instanceof Error ? err.message : String(err)
+      });
+    }
   }
 
   return text("EVENT_RECEIVED");
