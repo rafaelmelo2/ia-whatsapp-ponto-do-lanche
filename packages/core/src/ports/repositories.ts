@@ -14,6 +14,8 @@ export interface TenantRow {
   systemPromptPersonality: string | null;
   config: Record<string, unknown>;
   active: boolean;
+  waNumber: string | null;
+  waProvider: "meta" | "evolution";
   waPhoneNumberId: string | null;
   wabaId: string | null;
   status: "trial" | "active" | "past_due" | "suspended";
@@ -27,6 +29,8 @@ export interface TenantRepository {
   findById(id: string): Promise<TenantRow | null>;
   /** Roteamento de entrada: resolve o tenant pelo phone_number_id da Cloud API. */
   findByPhoneNumberId(waPhoneNumberId: string): Promise<TenantRow | null>;
+  /** Roteamento de entrada: resolve o tenant por wa_number (nome da instância Evolution, ou número normalizado). */
+  findByWaNumber(waNumber: string): Promise<TenantRow | null>;
 }
 
 // ── Order (escopado por tenant_id) ─────────────────────────────────────────

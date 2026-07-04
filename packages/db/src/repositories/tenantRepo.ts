@@ -11,6 +11,8 @@ interface TenantDbRow {
   system_prompt_personality: string | null;
   config: Record<string, unknown> | string;
   active: boolean;
+  wa_number: string | null;
+  wa_provider: TenantRow["waProvider"];
   wa_phone_number_id: string | null;
   waba_id: string | null;
   status: TenantRow["status"];
@@ -35,6 +37,8 @@ function map(r: TenantDbRow): TenantRow {
     systemPromptPersonality: r.system_prompt_personality,
     config: asObject(r.config),
     active: r.active,
+    waNumber: r.wa_number,
+    waProvider: r.wa_provider,
     waPhoneNumberId: r.wa_phone_number_id,
     wabaId: r.waba_id,
     status: r.status,
@@ -59,6 +63,14 @@ export class PgTenantRepository implements TenantRepository {
     const rows = (await this.sql.unsafe(
       "SELECT * FROM tenants WHERE wa_phone_number_id = $1",
       [waPhoneNumberId]
+    )) as unknown as TenantDbRow[];
+    return rows[0] ? map(rows[0]) : null;
+  }
+
+  async findByWaNumber(waNumber: string): Promise<TenantRow | null> {
+    const rows = (await this.sql.unsafe(
+      "SELECT * FROM tenants WHERE wa_number = $1",
+      [waNumber]
     )) as unknown as TenantDbRow[];
     return rows[0] ? map(rows[0]) : null;
   }
