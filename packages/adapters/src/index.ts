@@ -5,3 +5,9 @@ export {
   extractInstanceName,
   parseEvolutionWebhook
 } from "./whatsapp/evolution/index.js";
+export {
+  CloudApiProvider,
+  extractPhoneNumberId,
+  parseCloudApiWebhook,
+  verifyMetaSignature
+} from "./whatsapp/cloud-api/index.js";
