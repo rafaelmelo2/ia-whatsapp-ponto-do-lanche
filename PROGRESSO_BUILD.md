@@ -5,7 +5,38 @@
 > "PRÓXIMO PASSO" abaixo. Regras persistentes para qualquer agente Cursor:
 > `.cursor/rules/sirvase-*.mdc`. Não commitar sem o usuário pedir.
 
-Última atualização: 2026-07-01 (sessão 3) — Épico 1 completo.
+Última atualização: 2026-07-04 (sessão 5) — P4.0–P4.4 implementados e testados, webhook router ativo (echo ponta a ponta).
+
+## Decisão (sessão 4, 2026-07-04): WhatsApp — Evolution ativo + Cloud API pronta
+- **Motivo**: app da Meta ainda não foi aprovado, mas o usuário quer testar o fluxo ponta a
+  ponta muitas vezes já. Decisão: **Evolution API self-hosted vira o provedor ativo agora**;
+  **Cloud API é implementada em paralelo** (Épico 4 completo pros dois), pronta pra ligar por
+  tenant quando o app aprovar. Detalhe completo em `PLANO_EXECUCAO.md` Épico 4 (P4.0–P4.6) e
+  `claude.md §4`.
+- **Porta `WhatsAppProvider` redesenhada**: webhook+REST (`parseWebhook`/`sendText`/
+  `markAsRead`), substituindo o formato antigo em processo herdado da migração do Baileys
+  (`initialize`/`onMessage`/typing). `baileys-legacy` continua só como referência, nunca
+  implementa a porta nova.
+- **Roteamento unificado**: `tenants.wa_number` (E.164) é a identidade universal — nova
+  migration adiciona `wa_number` + `wa_provider` (`meta`|`evolution`). Instância Evolution é
+  sempre criada com nome = `wa_number`. `wa_phone_number_id` (já existe) vira campo técnico
+  só-Meta (exigido pela Graph API pra enviar).
+- **Dev local sem VPS/túnel**: Evolution roda em container próprio, só em
+  `config/orchestration/compose.local.yaml` (nunca staging/prod), reaproveitando
+  Postgres/Redis do stack (banco/índice lógico dedicados). Webhook aponta pra
+  `http://webhook:3001/webhook/evolution` por rede interna Docker — zero dependência de
+  domínio público ou túnel Cloudflare em dev. Trocar de máquina de desenvolvimento exige
+  re-escanear o QR (sessão não roda em duas instâncias Evolution ao mesmo tempo).
+  **Produção**: instância Evolution nova e isolada na VPS já existente do usuário (domínio
+  `sirvase.simetech.com.br`, `INGRESS_MODE=edge`) — nunca reusa a instância/número que atende
+  produção real (Ponto do Lanche do pai do usuário) via n8n. Meta, quando testável, também
+  precisa de reachability pública (túnel nomeado `cloudflared` ou o mesmo domínio) — não é
+  bloqueante agora.
+- **Autenticação do webhook Evolution**: ela não assina payload como a Meta
+  (`X-Hub-Signature-256`); autentica por token na própria URL (`EVOLUTION_WEBHOOK_TOKEN`).
+- **Ainda em aberto**: se esse trabalho (Épico 4) entra antes de terminar o Épico 2, ou depois
+  — decidir na próxima sessão/plano de implementação. "PRÓXIMO PASSO" abaixo não mudou por
+  enquanto.
 
 ## Decisões travadas (não reabrir)
 - **Runtime/workspaces: Bun** (1.3.9). NÃO npm/pnpm. Workspaces: `["packages/*","services/*"]` (apps/* entram no Épico 7).
@@ -135,9 +166,53 @@ base real. Lição: commitar ao fim de cada fase (o usuário já autorizou commi
 - ⚠️ `admin` "vê tudo" (cross-tenant) fica p/ o painel (Épico 7); hoje `/orders` sempre escopa ao tenant do token (TODO marcado no router). Signup público não existe de propósito (só admin cria users).
 - ⚠️ Container `api` em execução ainda tem o stub do Épico 0 — **rebuildar** (`docker compose up -d --build api`) p/ subir o código de auth no Docker.
 
+---
+
+## Status por fase do Épico 4
+
+### P4.0 — Schema: identidade universal de roteamento — ✅ FEITO
+- **Implementado em sessão 5**: migration `0010_add_wa_routing.sql` (commit `0fe756b`) adiciona `tenants.wa_number` (text, unique, E.164) e `tenants.wa_provider` (enum: `meta`|`evolution`). Seed do Ponto do Lanche ganhou `wa_number` + `wa_provider='evolution'`.
+- **DoD atingido**: migration aplica idempotentemente; seed roda sem duplicar; schema suporta roteamento universal por `wa_number`.
+
+### P4.1 — Porta `WhatsAppProvider` webhook+REST — ✅ FEITO
+- **Implementado em sessão 5** (commit `9355306`): redesenho da porta em `packages/core/src/ports/whatsapp.ts` — `parseWebhook(payload): IncomingMessage | null`, `sendText(to, text)`, `markAsRead(to, messageId)`. Herdado do Baileys (`initialize`/`onMessage`/typing) aposentado.
+- **DoD atingido**: core compila só com a porta nova; `baileys-legacy` continua como referência histórica, nunca implementa a porta.
+
+### P4.2 — `EvolutionApiProvider implements WhatsAppProvider` — ✅ FEITO
+- **Implementado em sessão 5** (commits `72898c8` + `cfd9bff`): adapter implementa a porta para Evolution API; `parseWebhook` traduz payloads da Evolution; `sendText`/`markAsRead` via REST (`EVOLUTION_API_URL`/`EVOLUTION_API_KEY`). Dev local: serviço `evolution` em `config/orchestration/compose.local.yaml` (banco/índice dedicados, volume pra persistir sessão), webhook aponta para `http://webhook:3001/webhook/evolution?token=...` via rede Docker.
+- **DoD atingido**: lógica do router é unit-testada (payloads simulados, sem instância Evolution ativa); config Docker Compose para o serviço `evolution` valida (`docker compose config` sem erros). Nenhuma Evolution/WhatsApp round-trip ao vivo ocorreu ainda (pendente: número de teste real + `docker compose up -d evolution` + escaneamento de QR).
+
+### P4.3 — `CloudApiProvider implements WhatsAppProvider` — ✅ FEITO
+- **Implementado em sessão 5** (commit `7c29d8c`): adapter implementa a porta para Meta Cloud API; `parseWebhook` valida e traduz webhook real; `sendText` via Graph API; verify (GET `hub.challenge`); validação `X-Hub-Signature-256`. Pronto pra ativar por tenant quando app da Meta aprovar.
+- **DoD atingido**: adapter é unit-testado contra payloads de webhook simulados (sem conta Meta ao vivo). Nenhum envio/recebimento real na Cloud API ocorreu — Meta app ainda não aprovado. Pendente: aprovação da app na Meta + credenciais reais (access token, phone_number_id).
+
+### P4.4 — Resolução tenant + autenticação de entrada — ✅ FEITO
+- **Implementado em sessão 5** (commits `2a97360` + `ad5c40d`): lookup em `tenants.wa_number` (Evolution) ou `tenants.wa_phone_number_id` (Meta) no webhook. `TenantRepository.findByWaNumber` (novo em `2a97360`). Webhook router em `services/webhook/src/router.ts` (commit `ad5c40d`) atende `GET /webhook/meta` (verify), `POST /webhook/meta` (messages), `POST /webhook/evolution` (messages); autenticação por provedor (Meta: `X-Hub-Signature-256`; Evolution: token na URL). Evolution não tem verify GET (sem handshake). Número/instância desconhecida: rejeita com log.
+- **DoD atingido**: mensagem chega em `/webhook/{evolution,meta}`, tenant é resolvido corretamente, entrada não autenticada é rejeitada. Echo funciona ponta a ponta para ambos os provedores.
+
+---
+
 ## PRÓXIMO PASSO (começar exatamente aqui)
-**🎉 ÉPICO 1 COMPLETO (P1.1–P1.4 ✅).** Banco + migrations + auth JWT + isolamento multi-tenant prontos e testados (16/16). Próximo é o **Épico 2 — Core modular: portas e adaptadores** (ver `PLANO_EXECUCAO.md` linha ~184).
-- **Commit P1.4 pendente** (só quando o usuário pedir; ele faz o push). Inclui: `packages/core/src/ports/repositories.ts` (UserRepository), `packages/db/src/repositories/userRepo.ts` + barrel, `services/api/src/{index,router,auth/*}.ts`, `services/api/test/auth.test.ts`, `services/api/package.json`, `bun.lock`, PROGRESSO.
-- **Antes de seguir p/ Épico 2**: rebuildar o container api p/ subir o código de auth (`docker compose up -d --build api`). Opcional agora — os testes já provam o código.
-- Stack local de pé (`docker compose ps`). Postgres loopback `127.0.0.1:15432`. Testes de integração do host: `bun test` (auto-skip se pg off). Login de dev do seed: `admin@pontodolanche.com` / `admin123`.
-- Épico 2 (resumo do plano): extrair o pipeline de uma mensagem para `packages/core/pipeline/`, formalizar ports `LlmProvider`/`MenuSource`/`PaymentProvider` com impl real + **mock** cada, wiring trocável por 1 linha. Reaproveitar orderParser/promptBuilder/guard já em core.
+**🎉 ÉPICO 4 — transporte/echo pronto (P4.0–P4.4 ✅); P4.5/P4.6 pendentes.** WhatsApp transport pronto **ponta a ponta (echo)** para Evolution (ativo) e Cloud API (pronta); webhook router atende ambos provedores; local Evolution container funcionando. P4.5 (janela 24h + templates) e P4.6 (shadow mode contra n8n) ainda não iniciados. 
+
+**Estado agregado:**
+- ✅ Épico 0: scaffolding monorepo, config, compose, persistência, proxy (51d9f4a).
+- ✅ Épico 1: banco, migrations 0001–0009, auth JWT, isolamento multi-tenant (1751879–906f101).
+- ✅ Épico 4: routing schema, ambos adapters WhatsApp, webhook router, Evolution local (0fe756b–cfd9bff).
+
+**Decisão estratégica — qual próximo?**
+
+Você tem dois caminhos de igual envergadura. Escolha com base na prioridade:
+
+1. **Resumir Épico 2** (core modular: LLM + menu + payment ports + mocks + pipeline básico):
+   - Vantagem: pipeline fica genérico e testável, desacoplado do transporte.
+   - Próximos: P2.1 → P2.2 → P2.3. Fim do Épico 2 deixa Echo funcional no worker (mock providers).
+   
+2. **Ativar Épico 3** (fila BullMQ + dedup + lock + idempotência):
+   - Vantagem: Evolution/Meta param de ecoar → processar de verdade (liga fila + worker).
+   - Próximos: P3.1 → P3.2 → P3.3 → P3.4. Fim do Épico 3 deixa fan-out resolvido (pronto pra LLM).
+
+**Recomendação**: ambos precisam rodar em paralelo eventual, mas sequencialmente agora — a fila (E3) não faz muito sem o pipeline (E2), e o pipeline sem fila fica mock puro. Sugestão: **termine E2 primeiro** (mais próximo do core), depois E3 (liga os dois).
+
+- **Testes locais**: `docker compose ps` (evolution saudável), `bun test` (16/16), webhook pronto em `:3001`.
+- **Próximo commit** (quando definir qual épico): trabalho das próximas sprints em nova sessão.

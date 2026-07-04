@@ -55,16 +55,16 @@ sirvase/
 │   │   ├── llm/                 # promptBuilder, guard, tool-calling
 │   │   ├── orders/              # domínio de pedido + schema Zod (reaproveitado)
 │   │   ├── menu/                # formatação + cache (porta MenuSource)
-│   │   └── tenants/             # resolução phone_number_id → tenant
+│   │   └── tenants/             # resolução wa_number/phone_number_id → tenant
 │   ├── adapters/                # IMPLEMENTAÇÕES das portas (substituíveis)
-│   │   ├── whatsapp/{cloud-api,baileys-legacy,mock}/
+│   │   ├── whatsapp/{evolution,cloud-api,baileys-legacy,mock}/
 │   │   ├── llm/{openrouter,mock}/
 │   │   ├── payment/{asaas,mock}/
 │   │   ├── menu/{internal-crud,external-api,mock}/
 │   │   └── db/                  # repos Postgres (implementam *Repository)
 │   └── config/                  # loader fail-fast da .env + config/app/{env}
 ├── services/
-│   ├── webhook/                 # 🔴 recebe webhook Meta → valida → SÓ enfileira → 200<5s
+│   ├── webhook/                 # 🔴 recebe webhook Evolution/Meta → valida → SÓ enfileira → 200<5s
 │   ├── worker/                  # 🔴 consome fila → pipeline → responde
 │   └── api/                     # REST + JWT para o painel
 ├── apps/
@@ -76,21 +76,21 @@ sirvase/
 
 **Fluxo-alvo de uma mensagem:**
 ```
-WhatsApp → Meta → POST /webhook (services/webhook)
-  → verifica X-Hub-Signature-256
-  → extrai phone_number_id, message_id, from, payload
+WhatsApp → Evolution ou Meta → POST /webhook/evolution ou /webhook/meta (services/webhook)
+  → autentica (token da Evolution ou X-Hub-Signature-256 da Meta)
+  → parseWebhook (adapter do provedor) extrai wa_number/phone_number_id, message_id, from, payload
   → enfileira {tenant_id?, message_id, from, payload} no Redis (BullMQ)
   → responde 200 (sempre <5s)
 [assíncrono]
 services/worker consome job
   → dedup por message_id (INSERT processed_messages ON CONFLICT DO NOTHING)
-  → resolve tenant por phone_number_id
+  → resolve tenant por wa_number (Evolution) ou wa_phone_number_id (Meta)
   → adquire lock por (tenant_id, from)   # serializa a conversa, mata o fan-out
   → carrega estado (sessions) + menu (MenuSource do tenant)
   → PromptBuilder → LlmProvider (tool-calling) → PromptGuard
   → tools: get_menu, calc_frete, criar_pedido(...)  → persiste orders (tenant_id)
   → entrega confiável ao lojista (painel + notificação, com reenvio)
-  → CloudApiProvider.sendText(resposta)
+  → WhatsAppProvider.sendText(resposta)  # EvolutionApiProvider ou CloudApiProvider, conforme tenants.wa_provider
   → grava estado + libera lock
 ```
 
@@ -184,9 +184,10 @@ services/worker consome job
 # ÉPICO 2 — Core modular: portas e adaptadores 🔴
 
 **P2.1 — Definir as portas (interfaces) no `core/ports`**
-- Entregas: `WhatsAppProvider` (send, parseWebhook, verify), `LlmProvider` (generate +
-  tool-calling), `PaymentProvider` (createSubscription, handleWebhook), `MenuSource`
-  (getMenu), e os `*Repository`. Tudo com tipos, sem implementação.
+- Entregas: `WhatsAppProvider` (`parseWebhook`, `sendText`, `markAsRead` — formato
+  webhook+REST, não o modelo antigo em processo com `initialize`/`onMessage`), `LlmProvider`
+  (generate + tool-calling), `PaymentProvider` (createSubscription, handleWebhook),
+  `MenuSource` (getMenu), e os `*Repository`. Tudo com tipos, sem implementação.
 - Pronto quando: core compila dependendo só de interfaces; nenhum import de SDK no core.
 - Depende de: P1.4
 
@@ -235,36 +236,87 @@ services/worker consome job
 
 ---
 
-# ÉPICO 4 — WhatsApp Cloud API (Meta direto) 🔴
+# ÉPICO 4 — WhatsApp: Evolution (ativo) + Cloud API (pronta, aguardando Meta) 🔴
 
-> Você conecta o número do primeiro cliente na mão (signup/BSP adiado). O webhook passa a
-> receber de verdade.
+> App da Meta ainda não foi aprovado. Decisão: **Evolution API self-hosted vira o provedor
+> ativo agora** (instância nova e isolada, tanto local em dev quanto na VPS onde já roda a
+> Evolution de produção real do usuário — nunca reusa a instância que atende produção via
+> n8n). **Cloud API é implementada em paralelo** e fica pronta pra ativar por tenant assim
+> que o app aprovar. Os dois implementam a mesma porta `WhatsAppProvider` (webhook+REST);
+> trocar/adicionar provedor é **rota fixa** (`/webhook/evolution` vs `/webhook/meta`), nunca
+> env var de seleção global — o pipeline/worker não sabe nem precisa saber qual originou a
+> mensagem.
 
-**P4.1 — `CloudApiProvider implements WhatsAppProvider`**
-- Entregas: envio de texto/template via Graph API; parse do webhook real; verify
-  (GET `hub.challenge`); validação `X-Hub-Signature-256`. Remove heurística anti-ban
-  (delay/typing/spoof) — não existe mais.
-- Pronto quando: envia e recebe numa conta de teste Meta.
-- Depende de: P3.4, P0.5 (HTTPS público)
+**P4.0 — Schema: identidade universal de roteamento**
+- Entregas: migration adiciona `tenants.wa_number` (text, unique, E.164 sem "+") e
+  `tenants.wa_provider` (`meta`|`evolution`, not null). `wa_phone_number_id` (já existe)
+  passa a ser explicitamente "só usado quando `wa_provider='meta'`", como chave técnica
+  pra montar a URL de envio da Graph API — não é mais a única forma de rotear.
+- Pronto quando: migration aplica; seed do tenant Ponto do Lanche (teste) ganha `wa_number`
+  + `wa_provider='evolution'`.
+- Depende de: P1.2
+- **Status: ✅ FEITO (sessão 5)** — echo ponta a ponta, sem fila/LLM ainda.
 
-**P4.2 — Resolução `phone_number_id → tenant`**
-- Entregas: lookup em `tenants.wa_phone_number_id` no webhook/worker; rejeita
-  payload de número desconhecido.
-- Pronto quando: mensagem chega e o tenant correto é resolvido; número não cadastrado é descartado com log.
-- Depende de: P4.1, P1.2
+**P4.1 — Porta `WhatsAppProvider` webhook+REST**
+- Entregas: redesenha a porta em `core/ports/whatsapp.ts` — `parseWebhook(payload):
+  IncomingMessage | null`, `sendText(to, text)`, `markAsRead(to, messageId)`. Remove o
+  formato antigo em processo (`initialize`/`onMessage`/typing) herdado da migração do
+  Baileys. `baileys-legacy` fica só como referência histórica, não implementa a porta nova.
+- Pronto quando: core compila só com a porta nova; nenhum adapter novo depende do formato
+  antigo.
+- Depende de: P4.0
+- **Status: ✅ FEITO (sessão 5)** — echo ponta a ponta, sem fila/LLM ainda.
 
-**P4.3 — Janela de 24h + templates**
-- Entregas: lógica que decide resposta livre (dentro da janela) vs **template aprovado**
-  (fora); registrar templates de "pedido pronto"/"saiu pra entrega".
-- Pronto quando: mensagem fora da janela usa template; dentro, texto livre.
+**P4.2 — `EvolutionApiProvider implements WhatsAppProvider` (ativo)**
+- Entregas: `parseWebhook` traduz o payload da Evolution; `sendText`/`markAsRead` via REST
+  dela (`EVOLUTION_API_URL`/`EVOLUTION_API_KEY`). **Dev local**: instância própria em
+  `config/orchestration/compose.local.yaml` (nunca staging/prod), reaproveitando
+  Postgres/Redis do stack (banco/índice lógico dedicados — não é dado multi-tenant nosso),
+  volume nomeado pra persistir a sessão, webhook configurado por env var pra
+  `http://webhook:3001/webhook/evolution?token=...` (rede interna Docker, sem túnel).
+  **Produção**: instância nova e isolada na Evolution já existente na VPS do usuário.
+- Pronto quando: mensagem de teste via Evolution local (Docker) chega no worker e o eco
+  volta pelo WhatsApp real.
+- Depende de: P4.1, P3.2 (webhook só enfileira)
+- **Status: ✅ FEITO (sessão 5)** — echo ponta a ponta, sem fila/LLM ainda.
+
+**P4.3 — `CloudApiProvider implements WhatsAppProvider` (pronta, não ativa)**
+- Entregas: envio de texto/template via Graph API; parse do webhook real; verify (GET
+  `hub.challenge`); validação `X-Hub-Signature-256`. Substitui a casca atual do
+  `services/webhook` (eco direto, sem fila) por implementação real da porta. Remove
+  heurística anti-ban (delay/typing/spoof) — não existe mais, nem aqui nem na Evolution.
+- Pronto quando: envia e recebe numa conta de teste Meta — **mas nenhum tenant real usa
+  esse provider até o app aprovar**.
 - Depende de: P4.1
+- **Status: ✅ FEITO (sessão 5)** — echo ponta a ponta, sem fila/LLM ainda.
 
-**P4.4 — Shadow mode contra o n8n (UM tenant, número de teste)**
-- Entregas: rodar o tenant da hamburgueria num **número de teste**, em paralelo ao n8n,
-  comparando respostas. n8n segue sendo a produção real.
-- Pronto quando: número de teste responde ponta a ponta com qualidade ≥ n8n por X dias,
-  zero incidente. **Só então** considerar migrar o número real (Épico 9).
+**P4.4 — Resolução tenant (`wa_number` / `wa_phone_number_id`) + autenticação de entrada**
+- Entregas: lookup em `tenants.wa_number` (Evolution — nome da instância) ou
+  `tenants.wa_phone_number_id` (Meta) no webhook/worker. Autenticação por provedor: Meta via
+  `X-Hub-Signature-256`; Evolution via token na própria URL do webhook
+  (`EVOLUTION_WEBHOOK_TOKEN`, já que ela não assina payload). Número/instância desconhecida:
+  descarta com log, não processa.
+- Pronto quando: mensagem chega em qualquer um dos dois `/webhook/*` e o tenant correto é
+  resolvido; entrada não autenticada é rejeitada; número/instância não cadastrado é
+  descartado com log.
 - Depende de: P4.2, P4.3
+- **Status: ✅ FEITO (sessão 5)** — echo ponta a ponta, sem fila/LLM ainda.
+
+**P4.5 — Janela de 24h + templates (só Meta)**
+- Entregas: lógica que decide resposta livre (dentro da janela) vs **template aprovado**
+  (fora); registrar templates de "pedido pronto"/"saiu pra entrega". Regra é exclusiva do
+  Cloud API — Evolution/WhatsApp pessoal não tem essa restrição.
+- Pronto quando: mensagem fora da janela usa template; dentro, texto livre.
+- Depende de: P4.3
+
+**P4.6 — Shadow mode contra o n8n (UM tenant, número de teste via Evolution)**
+- Entregas: rodar o tenant da hamburgueria num **número de teste na Evolution** (nunca o
+  número de produção real do n8n), em paralelo, comparando respostas. n8n segue sendo a
+  produção real.
+- Pronto quando: número de teste responde ponta a ponta com qualidade ≥ n8n por X dias,
+  zero incidente. **Só então** considerar migrar o número real (Épico 9) — decide-se ali
+  se o provedor final é Evolution ou Meta (se já aprovado).
+- Depende de: P4.4, P4.5
 
 ---
 
@@ -418,9 +470,15 @@ Embedded Signup/BSP · multi-número por loja · RBAC multi-usuário · auto-sca
 
 ## Decisões já travadas (não reabrir)
 1. Postgres no Docker + **auth JWT própria** (sem Supabase Auth).
-2. **Meta Cloud API direto**; você conecta o número do 1º cliente; signup/BSP adiado.
+2. **Evolution API self-hosted é o provedor ativo agora** (app da Meta ainda não aprovado);
+   **Cloud API é implementada em paralelo**, pronta pra ativar por tenant quando aprovar.
+   Signup/BSP/Embedded Signup adiado nos dois casos. Você conecta o número do 1º cliente
+   na mão.
 3. Cardápio: **interno (CRUD) com opção externa** (`cardapio_source`).
 4. **Mensalidade fixa, Asaas (Pix/boleto), trial 14 dias.**
 5. **Painel shadcn** simples no MVP (pedidos realtime + handoff + cardápio).
 6. **LLM via OpenRouter** (já trocou no n8n).
-7. Mira: **food service primeiro**, 1º teste na **hamburgueria**; arquitetura genérica para outros nichos.
+7. **Dois provedores de WhatsApp atrás da mesma porta** (`WhatsAppProvider`, webhook+REST),
+   roteados por `tenants.wa_number`/`wa_provider` — troca/adição de provedor é rota fixa
+   (`/webhook/evolution`, `/webhook/meta`), nunca env var de seleção global.
+8. Mira: **food service primeiro**, 1º teste na **hamburgueria**; arquitetura genérica para outros nichos.
