@@ -308,15 +308,31 @@ base real. Lição: commitar ao fim de cada fase (o usuário já autorizou commi
 ---
 
 ## PRÓXIMO PASSO (começar exatamente aqui)
-**🎉 ÉPICOS 2 E 3 COMPLETOS.** O caminho crítico agora está em: mensagem real → webhook →
-fila → worker → LLM → resposta + pedido no banco. Falta pro fluxo rodar AO VIVO com WhatsApp real:
+**🎉 ÉPICOS 2 E 3 COMPLETOS. Sessão pausada no meio da ativação ao vivo — falta SÓ escanear o QR.**
 
-1. **Restaurar `EVOLUTION_API_KEY`/`EVOLUTION_WEBHOOK_TOKEN` na `.env`** (sumiram — ver ⚠️ no DoD
-   do Épico 2; sem elas nem `docker compose up` interpola). `WHATSAPP_APP_SECRET` também segue
-   vazio (ok até a Meta aprovar).
-2. `docker compose up -d --build` (webhook/worker/api ainda rodam imagens velhas do Épico 0/4) +
-   `docker compose up -d evolution` + escanear QR do número de teste.
-3. Validar ponta a ponta real: mandar "oi" no número de teste → resposta do LLM (não mais eco).
+Estado exato em que a sessão 6 parou (2026-07-05):
+1. ✅ `.env` restaurado: `EVOLUTION_API_URL=http://evolution:8080` + `EVOLUTION_API_KEY` +
+   `EVOLUTION_WEBHOOK_TOKEN` **regenerados** (valores antigos se perderam; um backup do `.env`
+   anterior ficou no scratchpad temporário da sessão — se precisar dos valores velhos, era só isso).
+   `WHATSAPP_*`/`ASAAS_API_KEY`/`ENCRYPTION_KEY` seguem ausentes de propósito (Meta não aprovada).
+2. ✅ Stack COMPLETO rebuiltado e rodando: `docker compose up -d --build` ok — postgres, redis,
+   api, webhook, worker (consumindo fila `orders`, concurrency 5), evolution (v2.3.7), proxy.
+3. ✅ Instância Evolution `5511999999999` (= wa_number do tenant seed) criada via
+   `POST /instance/create` (integração WHATSAPP-BAILEYS), status ficou `connecting`.
+4. ⏸️ **PAROU AQUI: QR gerado mas NÃO escaneado** (QR expira em ~40s; o gerado na sessão já era).
+
+Pra retomar (roteiro exato):
+- Conferir stack: `docker compose ps` (7 containers up). Se derrubou: `docker compose up -d`.
+- Gerar QR novo: `curl -s -H "apikey: $EVOLUTION_API_KEY" http://127.0.0.1:8081/instance/connect/5511999999999`
+  → campo `base64` é um PNG data-URI (decodificar e mostrar pro usuário escanear).
+  Estado da conexão: `GET /instance/connectionState/5511999999999` (quer `open`).
+- ⚠️ Escanear com número de TESTE, NUNCA o número real do Ponto do Lanche que atende via n8n.
+- Depois de conectado: mandar "oi" de outro celular pro número conectado → conferir
+  `docker logs sirvase-webhook-1` ("mensagem enfileirada") e `docker logs sirvase-worker-1`
+  (pipeline; resposta do LLM deve chegar no WhatsApp — não mais eco).
+- Se der ruim no LLM: conferir `LLM_API_KEY` no `.env` (config/app/local.yaml usa
+  modelo via OpenRouter; adapter é `OpenRouterLlmProvider`, settings.llm.baseUrl).
+- Dica de troca de máquina/estado: sessão Evolution persiste em volume; QR novo só se desconectar.
 
 **Depois, os candidatos na ordem do caminho crítico (E0→E1→E2→E3→E4(shadow)→E6→E7→E8→E9):**
 - **P4.5** (janela 24h + templates, só Meta — pode esperar a app aprovar) e **P4.6** (shadow mode
