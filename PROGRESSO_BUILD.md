@@ -5,7 +5,7 @@
 > "PRÓXIMO PASSO" abaixo. Regras persistentes para qualquer agente Cursor:
 > `.cursor/rules/sirvase-*.mdc`. Não commitar sem o usuário pedir.
 
-Última atualização: 2026-07-04 (sessão 5) — P4.0–P4.4 implementados e testados, webhook router ativo (echo ponta a ponta).
+Última atualização: 2026-07-05 (sessão 6) — Épico 2 completo (P2.1–P2.3): portas LLM/Payment/Menu, mocks de todas as portas, pipeline ponta a ponta sem rede, prompt montado do tenant do banco.
 
 ## Decisão (sessão 4, 2026-07-04): WhatsApp — Evolution ativo + Cloud API pronta
 - **Motivo**: app da Meta ainda não foi aprovado, mas o usuário quer testar o fluxo ponta a
@@ -192,27 +192,73 @@ base real. Lição: commitar ao fim de cada fase (o usuário já autorizou commi
 
 ---
 
+## Status por fase do Épico 2 (sessão 6, 2026-07-05)
+
+### P2.1 — Portas no core/ports — ✅ FEITO
+- `packages/core/src/ports/llm.ts` (`LlmProvider.generate(messages, options)` com tool-calling:
+  `LlmToolDefinition`/`LlmToolCall`/`LlmResult`; `thought` p/ modelos com `<think>`), `ports/payment.ts`
+  (`PaymentProvider.createSubscription` + `parseWebhook` → `PaymentWebhookEvent | null`, mesmo padrão
+  webhook da porta WhatsApp; valores em **centavos**) e `ports/menu.ts` (`MenuSource.getMenu(tenant)`).
+- **Core ficou 100% sem I/O**: `menuService.ts` (fetch+cache), `orderRepo.ts`/`orderState.ts` (fs JSON)
+  e `loadTenantConfig.ts` (YAML por cliente) foram pra `_legacy/core-fs/`; `promptBase.md` virou
+  `promptBase.ts` (const TS, sem `fs.readFileSync`); formatação de cardápio virou `renderMenu()` +
+  `findItemPrice()` puros em `core/menu/renderMenu.ts`. Dep `js-yaml` removida do core.
+- ⚠️ Única exceção que restou: `logger.ts` lê `process.env.LOG_LEVEL` (pré-existente do Épico 0;
+  core não pode importar @sirvase/config pela regra de direção — resolver quando o logger for
+  revisitado no Épico 10).
+
+### P2.2 — Mocks de tudo + pipeline ponta a ponta — ✅ FEITO
+- Mocks em `packages/adapters/src/`: `whatsapp/mock` (grava `sent`/`reads`), `llm/mock` (respostas
+  canned roteirizadas, grava chamadas), `payment/mock` (gateway fake determinístico), `menu/mock`
+  (cardápio fixo — fixture é o antigo `menu_data.ts` do core), `repositories/in-memory`
+  (Tenant/Order/Session com as mesmas regras de isolamento e a UNIQUE de `idempotency_key`).
+- **`core/pipeline/processIncomingMessage.ts`**: orquestração de UMA mensagem só com portas
+  (markAsRead → session → menu → prompt do tenant → LLM → guard → OrderParser → cria order com
+  total RECALCULADO do cardápio + `idempotency_key = message_id` → sendText → persiste histórico
+  em `sessions.context.history`, cap 30 turnos). Grupo é ignorado. Dedup/lock/fila ficam pro Épico 3
+  (o worker chamará esta função por job).
+- Teste `packages/adapters/test/pipeline.test.ts` (7 casos): e2e sem rede/banco, prompt sem
+  placeholder órfão, total recalculado (item fora do cardápio não entra), guard corrige headers,
+  grupo ignorado, reprocesso da mesma mensagem não duplica pedido.
+- Correções de bugs latentes no `PromptBuilder` herdado: `{{store.name}}`/`{{payments.methods}}`/
+  `{{delivery.surcharge_per_sandwich}}` apareciam 2–3× no template mas só a 1ª era substituída
+  (agora `replaceAll`); `{{delivery.eta_min}}` nunca era preenchido (agora é, como "N minutos").
+
+### P2.3 — Prompt a partir do tenant do banco — ✅ FEITO
+- `core/config/tenantConfigFromRow.ts`: valida `tenants.config` (jsonb) com o `ConfigSchema` (Zod)
+  e aplica as colunas canônicas por cima (`store_name`, `catalog_api_url`,
+  `system_prompt_personality` → `tone.style`; `store.id` = UUID do tenant). Config inválida →
+  `TenantConfigError` (fail-fast). YAML por cliente aposentado de vez.
+- `ExternalApiMenuSource` (adapters/menu/external-api): herda o fetch do antigo MenuService, cache
+  **keyed por tenant.id** (Regra de Ouro 3), TTL 30min, fallback pro cache vencido em erro de rede.
+- Testes: `packages/core/test/tenantConfigFromRow.test.ts` (unit, 4 casos) +
+  `packages/db/test/promptFromTenant.test.ts` (integração: `PgTenantRepository.findById` do seed →
+  `tenantConfigFromRow` → `PromptBuilder.build` → prompt completo sem `{{`; skip gracioso sem DB).
+
+### DoD Épico 2 — ✅ TUDO VERDE (validado nesta sessão)
+- `bun run typecheck` limpo · `bun test` **54/54** com DB de pé (27 novos; sem DB: 39 pass + 22 skip)
+  · `bun run lint` 0 erros (1 warning pré-existente no orderParser).
+- ⚠️ Descoberta da sessão: `.env` local está **sem as vars `EVOLUTION_*`** (`EVOLUTION_API_KEY`,
+  `EVOLUTION_WEBHOOK_TOKEN`) — qualquer `docker compose up` falha na interpolação, mesmo pra subir só
+  o postgres (contornado com dummies inline). Migration 0010 também estava pendente neste banco
+  (aplicada + seed re-rodado nesta sessão). Restaurar as vars antes de retomar teste real da Evolution.
+
+---
+
 ## PRÓXIMO PASSO (começar exatamente aqui)
-**🎉 ÉPICO 4 — transporte/echo pronto (P4.0–P4.4 ✅); P4.5/P4.6 pendentes.** WhatsApp transport pronto **ponta a ponta (echo)** para Evolution (ativo) e Cloud API (pronta); webhook router atende ambos provedores; local Evolution container funcionando. P4.5 (janela 24h + templates) e P4.6 (shadow mode contra n8n) ainda não iniciados. 
+**🎉 ÉPICO 2 COMPLETO (P2.1–P2.3 ✅). Próximo: ÉPICO 3 (fila + idempotência), começando por P3.1.**
+O pipeline agora existe e roda ponta a ponta com mocks; falta ligá-lo ao mundo real: fila BullMQ
+(P3.1) → webhook só enfileira (P3.2) → worker com dedup + lock + pipeline (P3.3, teste do fan-out)
+→ estado de conversa 100% Postgres (P3.4). Era a sequência recomendada na sessão 5 (E2 antes de E3)
+e o usuário confirmou na sessão 6.
 
 **Estado agregado:**
 - ✅ Épico 0: scaffolding monorepo, config, compose, persistência, proxy (51d9f4a).
 - ✅ Épico 1: banco, migrations 0001–0009, auth JWT, isolamento multi-tenant (1751879–906f101).
-- ✅ Épico 4: routing schema, ambos adapters WhatsApp, webhook router, Evolution local (0fe756b–cfd9bff).
+- ✅ Épico 2: portas LLM/Payment/Menu, mocks de tudo, pipeline sem rede, prompt do tenant do banco (sessão 6).
+- ✅ Épico 4 (parcial): routing schema, ambos adapters WhatsApp, webhook router echo, Evolution local (0fe756b–cfd9bff). P4.5/P4.6 pendentes.
 
-**Decisão estratégica — qual próximo?**
-
-Você tem dois caminhos de igual envergadura. Escolha com base na prioridade:
-
-1. **Resumir Épico 2** (core modular: LLM + menu + payment ports + mocks + pipeline básico):
-   - Vantagem: pipeline fica genérico e testável, desacoplado do transporte.
-   - Próximos: P2.1 → P2.2 → P2.3. Fim do Épico 2 deixa Echo funcional no worker (mock providers).
-   
-2. **Ativar Épico 3** (fila BullMQ + dedup + lock + idempotência):
-   - Vantagem: Evolution/Meta param de ecoar → processar de verdade (liga fila + worker).
-   - Próximos: P3.1 → P3.2 → P3.3 → P3.4. Fim do Épico 3 deixa fan-out resolvido (pronto pra LLM).
-
-**Recomendação**: ambos precisam rodar em paralelo eventual, mas sequencialmente agora — a fila (E3) não faz muito sem o pipeline (E2), e o pipeline sem fila fica mock puro. Sugestão: **termine E2 primeiro** (mais próximo do core), depois E3 (liga os dois).
-
-- **Testes locais**: `docker compose ps` (evolution saudável), `bun test` (16/16), webhook pronto em `:3001`.
-- **Próximo commit** (quando definir qual épico): trabalho das próximas sprints em nova sessão.
+**Antes de começar o Épico 3:**
+- Restaurar `EVOLUTION_API_KEY`/`EVOLUTION_WEBHOOK_TOKEN` na `.env` (sumiram — ver ⚠️ no DoD do Épico 2).
+- P3.3 vai trocar o echo do webhook router por enfileirar + worker chamando `processIncomingMessage`.
+- **Testes locais**: `bun test` (54/54 com postgres de pé em 127.0.0.1:15432), typecheck/lint verdes.

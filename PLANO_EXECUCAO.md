@@ -183,7 +183,7 @@ services/worker consome job
 
 # ÉPICO 2 — Core modular: portas e adaptadores 🔴
 
-**P2.1 — Definir as portas (interfaces) no `core/ports`**
+**P2.1 — Definir as portas (interfaces) no `core/ports`** — ✅ FEITO (sessão 6)
 - Entregas: `WhatsAppProvider` (`parseWebhook`, `sendText`, `markAsRead` — formato
   webhook+REST, não o modelo antigo em processo com `initialize`/`onMessage`), `LlmProvider`
   (generate + tool-calling), `PaymentProvider` (createSubscription, handleWebhook),
@@ -191,12 +191,12 @@ services/worker consome job
 - Pronto quando: core compila dependendo só de interfaces; nenhum import de SDK no core.
 - Depende de: P1.4
 
-**P2.2 — Adaptadores mock de tudo**
+**P2.2 — Adaptadores mock de tudo** — ✅ FEITO (sessão 6)
 - Entregas: `mock` de cada porta (WhatsApp echo, LLM canned, Payment fake, Menu fixo).
 - Pronto quando: pipeline roda ponta a ponta só com mocks, sem rede.
 - Depende de: P2.1
 
-**P2.3 — Migrar promptBuilder + guard + schema de pedido (reaproveitar)**
+**P2.3 — Migrar promptBuilder + guard + schema de pedido (reaproveitar)** — ✅ FEITO (sessão 6)
 - Entregas: portar `promptBase.md`, `promptBuilder.ts`, `guard.ts` e o **schema Zod** de
   pedido para `core/`. Variáveis do prompt passam a vir do tenant (banco), não do YAML.
 - Pronto quando: prompt monta a partir de um `tenant` carregado do banco.

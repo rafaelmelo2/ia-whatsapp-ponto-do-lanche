@@ -1,4 +1,6 @@
-import { MenuItem } from "../menu/menuTypes.js";
+// Cardápio fixo pro MockMenuSource (snapshot real do Ponto do Lanche, era
+// core/menu/menu_data.ts — dado de mock não é domínio, então mora no adapter).
+import type { MenuItem } from "@sirvase/core";
 
 export const MOCK_MENU_ITEMS: MenuItem[] = [
   // Hambúrgueres
