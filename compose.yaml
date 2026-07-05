@@ -66,6 +66,22 @@ services:
         SERVICE_ENTRY: services/webhook/src/index.ts
     env_file: .env
     depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_ENTRY: services/worker/src/index.ts
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
     restart: unless-stopped

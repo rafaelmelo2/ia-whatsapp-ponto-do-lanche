@@ -10,6 +10,8 @@ export * from "./ports/repositories.js";
 export * from "./ports/llm.js";
 export * from "./ports/payment.js";
 export * from "./ports/menu.js";
+export * from "./ports/queue.js";
+export * from "./ports/lock.js";
 
 // Config de tenant (negócio, não-infra)
 export * from "./config/tenantConfigSchema.js";
@@ -30,3 +32,4 @@ export * from "./llm/promptBuilder.js";
 
 // Pipeline: orquestração de uma mensagem entrante (só portas, zero SDK)
 export * from "./pipeline/processIncomingMessage.js";
+export * from "./pipeline/handleIncomingJob.js";

@@ -101,6 +101,18 @@ export interface UserRepository {
   create(input: CreateUserInput): Promise<UserRow>;
 }
 
+// ── ProcessedMessage (dedup por message_id — Regra de Ouro 4: idempotência
+//    ANTES de qualquer efeito colateral). message_id é PK global (id do provedor
+//    já é único no mundo); tenant_id acompanha pra auditoria/limpeza. ──
+export interface ProcessedMessageRepository {
+  /** Tenta registrar a mensagem como processada (INSERT ON CONFLICT DO NOTHING).
+   *  `true` = primeira vez (pode processar); `false` = duplicata (descartar). */
+  markProcessed(tenantId: string, messageId: string): Promise<boolean>;
+  /** Compensação: desfaz o registro quando o processamento falhou DEPOIS do mark,
+   *  pra retry do job não ser engolido pela dedup. */
+  unmark(tenantId: string, messageId: string): Promise<void>;
+}
+
 // ── Session (escopado por tenant_id; chave natural (tenant_id, phone_number)) ──
 export interface SessionRow {
   id: string;

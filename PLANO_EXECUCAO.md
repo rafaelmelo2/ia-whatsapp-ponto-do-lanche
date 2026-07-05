@@ -209,19 +209,19 @@ services/worker consome job
 > Aqui você mata o fan-out **antes** de tocar no transporte. Ainda dá pra rodar com o
 > adaptador mock/baileys — o objetivo é a refatoração do pipeline, não o Cloud API.
 
-**P3.1 — Fila Redis + BullMQ**
+**P3.1 — Fila Redis + BullMQ** — ✅ FEITO (sessão 6)
 - Entregas: fila `incoming-messages`; produtor e consumidor; retry com backoff + dead-letter.
 - Pronto quando: job entra e é consumido; falha vai pra DLQ.
 - Depende de: P0.4, P2.2
 
-**P3.2 — `services/webhook`: só valida e enfileira**
+**P3.2 — `services/webhook`: só valida e enfileira** — ✅ FEITO (sessão 6)
 - Entregas: endpoint que recebe payload (mock por enquanto), extrai
   `{message_id, from, payload}`, enfileira, responde 200 **sempre <5s**. Nenhum efeito
   colateral aqui.
 - Pronto quando: webhook responde 200 rápido e o job aparece na fila.
 - Depende de: P3.1
 
-**P3.3 — `services/worker`: dedup + lock + pipeline**
+**P3.3 — `services/worker`: dedup + lock + pipeline** — ✅ FEITO (sessão 6)
 - Entregas: worker consome; **dedup por `message_id`** (`processed_messages` ON CONFLICT);
   **lock por `(tenant_id, from)`** (Redis SETNX + TTL) para serializar a conversa; chama o
   pipeline do core; grava estado em `sessions` (Postgres).
@@ -229,7 +229,7 @@ services/worker consome job
   cliente geram UMA resposta, sem pedido duplicado.
 - Depende de: P3.2, P2.3
 
-**P3.4 — Estado de conversa: JSON → Postgres**
+**P3.4 — Estado de conversa: JSON → Postgres** — ✅ FEITO (sessão 6)
 - Entregas: `sessions.context` como verdade; Redis só lock/efêmero. Aposenta os `*.json`.
 - Pronto quando: reiniciar o worker não perde contexto de conversa.
 - Depende de: P3.3

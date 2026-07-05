@@ -5,7 +5,7 @@
 > "PRÓXIMO PASSO" abaixo. Regras persistentes para qualquer agente Cursor:
 > `.cursor/rules/sirvase-*.mdc`. Não commitar sem o usuário pedir.
 
-Última atualização: 2026-07-05 (sessão 6) — Épico 2 completo (P2.1–P2.3): portas LLM/Payment/Menu, mocks de todas as portas, pipeline ponta a ponta sem rede, prompt montado do tenant do banco.
+Última atualização: 2026-07-05 (sessão 6) — Épicos 2 E 3 completos. E2: portas LLM/Payment/Menu, mocks de tudo, pipeline sem rede, prompt do tenant do banco. E3: fila BullMQ com DLQ, webhook só enfileira, worker com dedup+lock+pipeline (teste do fan-out verde), estado 100% Postgres.
 
 ## Decisão (sessão 4, 2026-07-04): WhatsApp — Evolution ativo + Cloud API pronta
 - **Motivo**: app da Meta ainda não foi aprovado, mas o usuário quer testar o fluxo ponta a
@@ -245,20 +245,91 @@ base real. Lição: commitar ao fim de cada fase (o usuário já autorizou commi
 
 ---
 
+## Status por fase do Épico 3 (sessão 6, 2026-07-05)
+
+### P3.1 — Fila Redis + BullMQ — ✅ FEITO
+- Porta `core/ports/queue.ts`: `IncomingMessageJob {tenantId, message}`, `MessageQueueProducer.enqueue`,
+  `MessageQueueConsumer.start(handler)/close`. Dep nova: **bullmq** (só em @sirvase/adapters).
+- `adapters/queue/bullmq`: `BullMqProducer` (retry 3× backoff exponencial; **jobId determinístico
+  `tenantId__messageId`** — 1ª barreira de dedup na própria fila; separador `__` porque BullMQ proíbe
+  `:` em jobId) e `BullMqConsumer` (concurrency configurável; ao esgotar tentativas o job é COPIADO
+  pra fila `<nome>-dlq` com failedReason). `adapters/queue/mock`: `InMemoryMessageQueue` com as
+  mesmas semânticas (jobId dedup, attempts, DLQ, `idle()`).
+- Teste integração `packages/adapters/test/bullmqQueue.test.ts` contra Redis real
+  (127.0.0.1:16379, skipIf down): job entra→consumido; reentrega mesmo jobId não duplica; falha
+  permanente → DLQ. Fila de teste com nome único + obliterate no afterAll.
+
+### P3.2 — Webhook só valida e enfileira — ✅ FEITO
+- `services/webhook/src/router.ts` reescrito: **eco morreu**. Fluxo: auth por provedor (Meta
+  assinatura / Evolution token na URL) → resolve tenant (`wa_phone_number_id`/`wa_number`) → parse
+  (funções standalone dos adapters, sem instanciar provider de envio) → `queue.enqueue` → 200.
+- **Falha no enqueue (Redis fora) → 500 de propósito**: único caso em que QUEREMOS reentrega do
+  provedor (mensagem ainda não está segura em lugar nenhum); a dedup do worker absorve a duplicata.
+  Não viola o "200 sempre <5s" — esse é sobre não atrasar/reprocessar por lentidão.
+- `RouterDeps` agora é `{tenants, queue, tokens...}` (sem factories de provider). Wiring usa
+  `BullMqProducer(settings.queue.name)` (= fila `orders`, config/app/*.yaml).
+- Testes do router reescritos (12 casos) com payloads realistas dos 2 provedores + parse real.
+- **Smoke real validado**: webhook local + POST payload Evolution → `HTTP 200 em 0.025s`, job na
+  fila `orders` do Redis com tenant resolvido (UUID do seed), depois removido.
+
+### P3.3 — Worker: dedup + lock + pipeline — ✅ FEITO
+- Ports novas: `ProcessedMessageRepository` (`markProcessed` = INSERT ON CONFLICT → bool;
+  `unmark` = compensação) e `ConversationLock` (`acquire(tenant, from, ttl)`/`release`).
+- Impl: `PgProcessedMessageRepository` (@sirvase/db) e `RedisConversationLock`
+  (**RedisClient NATIVO do Bun** — zero dep nova; SET NX PX com token por aquisição, release
+  atômico via EVAL só-se-token-é-meu). Mocks in-memory de ambos em adapters.
+- `core/pipeline/handleIncomingJob.ts` — `createIncomingJobHandler(deps, opts)`: tenant fresco do
+  banco (descarta inativo sem retry) → **dedup** → **lock com espera/retry** (estourou →
+  `LockTimeoutError` → job volta pro retry da fila) → `processIncomingMessage` → release. Erro
+  após o mark de dedup → `unmark` + rethrow (retry da fila NÃO é engolido como duplicata).
+- `services/worker/src/index.ts` real: BullMqConsumer + repos Pg + `RedisConversationLock` +
+  `OpenRouterLlmProvider` (**adapter novo** da porta LlmProvider — SDK OpenAI apontado pro
+  OpenRouter, settings.llm; suporta tool-calling e extrai `<think>`) + `ExternalApiMenuSource` +
+  `whatsappFor(tenant)` escolhendo Evolution/Cloud API por `tenants.wa_provider`. Shutdown
+  gracioso em SIGTERM/SIGINT. Worker ganhou dep `@sirvase/db`; service `worker` add no compose.
+- **Teste do fan-out** `services/worker/test/fanout.test.ts` (6 casos): mesma mensagem 2×
+  simultânea → 1 chamada de LLM, 1 resposta, 1 pedido; 2 mensagens diferentes simultâneas →
+  serializadas pelo lock (a 2ª chamada de LLM já vê o turno da 1ª; histórico com 4 turnos, nenhum
+  perdido); tenant inativo descartado; falha transitória → unmark + retry processa; falha
+  permanente → DLQ sem resposta duplicada.
+
+### P3.4 — Estado de conversa: JSON → Postgres — ✅ FEITO (já nascido certo no E2)
+- `sessions.context` é a verdade desde o pipeline do E2 (`SessionRepository.upsert`); os `*.json`
+  legados já tinham ido pra `_legacy/core-fs/orderState.ts`. Redis = só lock/fila (efêmero).
+- Provado no teste do fan-out: "restart do worker" (handler/lock/LLM novos, MESMO storage) →
+  worker novo vê a conversa inteira; estado mora no repositório, não no processo.
+
+### DoD Épico 3 — ✅ TUDO VERDE (validado nesta sessão)
+- typecheck limpo · **bun test 64/64** (pg + redis de pé; 10 novos) · lint 0 erros (1 warning
+  pré-existente) · `docker compose config` valida com o service worker · smoke webhook→fila ok.
+- ⚠️ Worker só tem `ExternalApiMenuSource` — tenant com `cardapio_source=internal` precisa do
+  adapter internal-crud (P6.2/P7.4). Templates/janela 24h da Meta (P4.5) seguem pendentes.
+
+---
+
 ## PRÓXIMO PASSO (começar exatamente aqui)
-**🎉 ÉPICO 2 COMPLETO (P2.1–P2.3 ✅). Próximo: ÉPICO 3 (fila + idempotência), começando por P3.1.**
-O pipeline agora existe e roda ponta a ponta com mocks; falta ligá-lo ao mundo real: fila BullMQ
-(P3.1) → webhook só enfileira (P3.2) → worker com dedup + lock + pipeline (P3.3, teste do fan-out)
-→ estado de conversa 100% Postgres (P3.4). Era a sequência recomendada na sessão 5 (E2 antes de E3)
-e o usuário confirmou na sessão 6.
+**🎉 ÉPICOS 2 E 3 COMPLETOS.** O caminho crítico agora está em: mensagem real → webhook →
+fila → worker → LLM → resposta + pedido no banco. Falta pro fluxo rodar AO VIVO com WhatsApp real:
+
+1. **Restaurar `EVOLUTION_API_KEY`/`EVOLUTION_WEBHOOK_TOKEN` na `.env`** (sumiram — ver ⚠️ no DoD
+   do Épico 2; sem elas nem `docker compose up` interpola). `WHATSAPP_APP_SECRET` também segue
+   vazio (ok até a Meta aprovar).
+2. `docker compose up -d --build` (webhook/worker/api ainda rodam imagens velhas do Épico 0/4) +
+   `docker compose up -d evolution` + escanear QR do número de teste.
+3. Validar ponta a ponta real: mandar "oi" no número de teste → resposta do LLM (não mais eco).
+
+**Depois, os candidatos na ordem do caminho crítico (E0→E1→E2→E3→E4(shadow)→E6→E7→E8→E9):**
+- **P4.5** (janela 24h + templates, só Meta — pode esperar a app aprovar) e **P4.6** (shadow mode
+  contra o n8n num número de teste — DEPENDE do fluxo ao vivo acima).
+- **Épico 6** (hardening multi-tenant: secrets por tenant, cache de menu, entrega confiável ao
+  lojista, handoff humano) — P6.3 é pré-requisito do painel de pedidos (P7.2).
+- **Épico 5** (tool-calling substitui o parser <<<JSON>>>) — paralelizável, melhora qualidade.
 
 **Estado agregado:**
 - ✅ Épico 0: scaffolding monorepo, config, compose, persistência, proxy (51d9f4a).
-- ✅ Épico 1: banco, migrations 0001–0009, auth JWT, isolamento multi-tenant (1751879–906f101).
-- ✅ Épico 2: portas LLM/Payment/Menu, mocks de tudo, pipeline sem rede, prompt do tenant do banco (sessão 6).
-- ✅ Épico 4 (parcial): routing schema, ambos adapters WhatsApp, webhook router echo, Evolution local (0fe756b–cfd9bff). P4.5/P4.6 pendentes.
-
-**Antes de começar o Épico 3:**
-- Restaurar `EVOLUTION_API_KEY`/`EVOLUTION_WEBHOOK_TOKEN` na `.env` (sumiram — ver ⚠️ no DoD do Épico 2).
-- P3.3 vai trocar o echo do webhook router por enfileirar + worker chamando `processIncomingMessage`.
-- **Testes locais**: `bun test` (54/54 com postgres de pé em 127.0.0.1:15432), typecheck/lint verdes.
+- ✅ Épico 1: banco, migrations 0001–0010, auth JWT, isolamento multi-tenant (1751879–906f101).
+- ✅ Épico 2: portas LLM/Payment/Menu, mocks de tudo, pipeline sem rede, prompt do tenant do banco (e55d5e4).
+- ✅ Épico 3: fila BullMQ+DLQ, webhook enfileira, worker dedup+lock+pipeline, fan-out verde (sessão 6).
+- ✅ Épico 4 (parcial): routing schema, ambos adapters WhatsApp, Evolution local. P4.5/P4.6 pendentes.
+- **Testes locais**: `bun test` 64/64 (postgres 127.0.0.1:15432 + redis 127.0.0.1:16379 de pé),
+  typecheck limpo, lint 0 erros.

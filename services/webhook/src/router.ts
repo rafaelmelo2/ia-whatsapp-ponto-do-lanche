@@ -1,15 +1,21 @@
-// Router HTTP do webhook. Handler puro `(req) => Response` com deps injetadas — mesmo
-// padrão do services/api/src/router.ts. Duas rotas fixas, uma por provedor; o pipeline
-// real (fila/dedup/LLM) chega nos Épicos 2/3/5 — por ora, eco de volta (mesma casca que
-// já existia só pra Meta, estendida pros dois provedores).
-import type { TenantRepository, WhatsAppProvider } from "@sirvase/core";
+// Router HTTP do webhook (P3.2): valida autenticação por provedor, resolve o
+// tenant, traduz o payload e SÓ ENFILEIRA — nenhum outro efeito colateral aqui.
+// Responde 200 rápido (<5s) pro provedor não reentregar; o processamento real
+// (dedup, lock, LLM, resposta) é do worker, consumindo a fila.
+// Handler puro `(req) => Response` com deps injetadas — mesmo padrão do services/api.
+import type { MessageQueueProducer, TenantRepository } from "@sirvase/core";
 import { logger } from "@sirvase/core";
-import { extractInstanceName, extractPhoneNumberId, verifyMetaSignature } from "@sirvase/adapters";
+import {
+  extractInstanceName,
+  extractPhoneNumberId,
+  parseCloudApiWebhook,
+  parseEvolutionWebhook,
+  verifyMetaSignature
+} from "@sirvase/adapters";
 
 export interface RouterDeps {
   tenants: TenantRepository;
-  makeEvolutionProvider: (instanceName: string) => WhatsAppProvider;
-  makeCloudApiProvider: (phoneNumberId: string) => WhatsAppProvider;
+  queue: MessageQueueProducer;
   metaVerifyToken?: string;
   metaAppSecret?: string;
   evolutionWebhookToken?: string;
@@ -49,6 +55,33 @@ function handleMetaVerify(url: URL, deps: RouterDeps): Response {
   return text("Forbidden", 403);
 }
 
+/** Enfileira e responde. Falha no enqueue (Redis fora) → 500 DE PROPÓSITO: é o
+ *  único caso em que QUEREMOS a reentrega do provedor (a mensagem ainda não está
+ *  segura em lugar nenhum); a dedup do worker absorve a duplicata quando voltar. */
+async function enqueueAndAck(
+  deps: RouterDeps,
+  tenantId: string,
+  message: NonNullable<ReturnType<typeof parseCloudApiWebhook>>,
+  okBody: string
+): Promise<Response> {
+  try {
+    await deps.queue.enqueue({ tenantId, message });
+    logger.info("webhook: mensagem enfileirada", {
+      tenantId,
+      messageId: message.messageId,
+      from: message.from
+    });
+    return text(okBody);
+  } catch (err) {
+    logger.error("webhook: FALHA AO ENFILEIRAR (pedindo reentrega ao provedor)", {
+      tenantId,
+      messageId: message.messageId,
+      err: err instanceof Error ? err.message : String(err)
+    });
+    return text("Internal Server Error", 500);
+  }
+}
+
 async function handleMetaMessage(req: Request, deps: RouterDeps): Promise<Response> {
   const raw = await req.text();
   const signature = req.headers.get("X-Hub-Signature-256");
@@ -76,21 +109,12 @@ async function handleMetaMessage(req: Request, deps: RouterDeps): Promise<Respon
     return text("EVENT_RECEIVED");
   }
 
-  const provider = deps.makeCloudApiProvider(phoneNumberId);
-  const msg = provider.parseWebhook(payload);
-  if (msg) {
-    logger.info("webhook: mensagem Meta recebida", { tenantId: tenant.id, from: msg.from });
-    try {
-      await provider.sendText(msg.from, `eco: ${msg.body}`);
-    } catch (err) {
-      logger.error("webhook: falha ao enviar eco via Meta", {
-        tenantId: tenant.id,
-        err: err instanceof Error ? err.message : String(err)
-      });
-    }
+  const msg = parseCloudApiWebhook(payload);
+  if (!msg) {
+    return text("EVENT_RECEIVED"); // status/mídia/etc — não é mensagem de texto processável
   }
 
-  return text("EVENT_RECEIVED");
+  return enqueueAndAck(deps, tenant.id, msg, "EVENT_RECEIVED");
 }
 
 async function handleEvolutionMessage(req: Request, url: URL, deps: RouterDeps): Promise<Response> {
@@ -119,19 +143,10 @@ async function handleEvolutionMessage(req: Request, url: URL, deps: RouterDeps):
     return text("EVENT_RECEIVED");
   }
 
-  const provider = deps.makeEvolutionProvider(instanceName);
-  const msg = provider.parseWebhook(payload);
-  if (msg) {
-    logger.info("webhook: mensagem Evolution recebida", { tenantId: tenant.id, from: msg.from });
-    try {
-      await provider.sendText(msg.from, `eco: ${msg.body}`);
-    } catch (err) {
-      logger.error("webhook: falha ao enviar eco via Evolution", {
-        tenantId: tenant.id,
-        err: err instanceof Error ? err.message : String(err)
-      });
-    }
+  const msg = parseEvolutionWebhook(payload);
+  if (!msg) {
+    return text("EVENT_RECEIVED");
   }
 
-  return text("EVENT_RECEIVED");
+  return enqueueAndAck(deps, tenant.id, msg, "EVENT_RECEIVED");
 }

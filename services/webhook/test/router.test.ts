@@ -1,5 +1,9 @@
+// P3.2: o webhook valida, resolve tenant e SÓ ENFILEIRA (o eco morreu — quem
+// processa/responde é o worker). Payloads realistas dos dois provedores; o
+// parse é o real dos adapters, a fila é o mock in-memory.
 import { describe, expect, test } from "bun:test";
-import type { IncomingMessage, TenantRepository, TenantRow, WhatsAppProvider } from "@sirvase/core";
+import type { IncomingMessageJob, MessageQueueProducer, TenantRepository, TenantRow } from "@sirvase/core";
+import { InMemoryMessageQueue } from "@sirvase/adapters";
 import { createRouter } from "../src/router.ts";
 
 function fakeTenant(overrides: Partial<TenantRow> = {}): TenantRow {
@@ -38,123 +42,169 @@ class FakeTenantRepository implements TenantRepository {
   }
 }
 
-class FakeProvider implements WhatsAppProvider {
-  public sent: Array<{ to: string; text: string }> = [];
-  constructor(private readonly fixedMessage: IncomingMessage | null) {}
-  parseWebhook(): IncomingMessage | null {
-    return this.fixedMessage;
+/** Simula Redis fora do ar: enqueue explode. */
+class FailingQueue implements MessageQueueProducer {
+  async enqueue(_job: IncomingMessageJob): Promise<void> {
+    throw new Error("Redis indisponível");
   }
-  async sendText(to: string, text: string): Promise<void> {
-    this.sent.push({ to, text });
-  }
-  async markAsRead(): Promise<void> {}
 }
 
-/** Simula falha de rede no envio (ex: provedor externo indisponível). */
-class FailingProvider implements WhatsAppProvider {
-  constructor(private readonly fixedMessage: IncomingMessage | null) {}
-  parseWebhook(): IncomingMessage | null {
-    return this.fixedMessage;
+// Payload realista da Evolution (messages.upsert, texto simples).
+const EVOLUTION_PAYLOAD = {
+  event: "messages.upsert",
+  instance: "5511999990001",
+  data: {
+    key: { remoteJid: "5511888887777@s.whatsapp.net", fromMe: false, id: "evo-msg-1" },
+    pushName: "Cliente Teste",
+    message: { conversation: "Oi, quero um lanche" }
   }
-  async sendText(): Promise<void> {
-    throw new Error("Unable to connect. Is the computer able to access the url?");
-  }
-  async markAsRead(): Promise<void> {}
-}
-
-const INCOMING: IncomingMessage = {
-  from: "5511888887777",
-  body: "Oi, quero um lanche",
-  isGroup: false,
-  messageId: "msg-1"
 };
 
-describe("webhook router — Evolution", () => {
-  test("token correto + instância conhecida: eco enviado", async () => {
-    const provider = new FakeProvider(INCOMING);
+// Payload realista da Meta (mensagem de texto).
+const META_PAYLOAD = {
+  entry: [
+    {
+      changes: [
+        {
+          value: {
+            metadata: { phone_number_id: "123456789012345" },
+            contacts: [{ profile: { name: "Cliente Teste" } }],
+            messages: [
+              { from: "5511888887777", id: "meta-msg-1", type: "text", text: { body: "Oi, quero um lanche" } }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+};
+
+async function signMeta(body: string, appSecret: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(appSecret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sigBytes = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body)));
+  const hex = Array.from(sigBytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return `sha256=${hex}`;
+}
+
+describe("webhook router — Evolution (P3.2: só enfileira)", () => {
+  test("token correto + instância conhecida: job na fila, 200", async () => {
+    const queue = new InMemoryMessageQueue();
     const handle = createRouter({
       tenants: new FakeTenantRepository(fakeTenant()),
-      makeEvolutionProvider: () => provider,
-      makeCloudApiProvider: () => new FakeProvider(null),
+      queue,
       evolutionWebhookToken: "token-secreto"
     });
 
     const res = await handle(
       new Request("http://webhook.test/webhook/evolution?token=token-secreto", {
         method: "POST",
-        body: JSON.stringify({ event: "messages.upsert", instance: "5511999990001" })
+        body: JSON.stringify(EVOLUTION_PAYLOAD)
       })
     );
 
     expect(res.status).toBe(200);
-    expect(provider.sent).toEqual([{ to: "5511888887777", text: "eco: Oi, quero um lanche" }]);
+    expect(queue.enqueued).toEqual([
+      {
+        tenantId: "tenant-1",
+        message: {
+          from: "5511888887777",
+          body: "Oi, quero um lanche",
+          pushName: "Cliente Teste",
+          isGroup: false,
+          messageId: "evo-msg-1"
+        }
+      }
+    ]);
   });
 
-  test("token errado: 401 e nada enviado", async () => {
-    const provider = new FakeProvider(INCOMING);
+  test("token errado: 401 e fila vazia", async () => {
+    const queue = new InMemoryMessageQueue();
     const handle = createRouter({
       tenants: new FakeTenantRepository(fakeTenant()),
-      makeEvolutionProvider: () => provider,
-      makeCloudApiProvider: () => new FakeProvider(null),
+      queue,
       evolutionWebhookToken: "token-secreto"
     });
 
     const res = await handle(
       new Request("http://webhook.test/webhook/evolution?token=errado", {
         method: "POST",
-        body: JSON.stringify({ event: "messages.upsert", instance: "5511999990001" })
+        body: JSON.stringify(EVOLUTION_PAYLOAD)
       })
     );
 
     expect(res.status).toBe(401);
-    expect(provider.sent).toEqual([]);
+    expect(queue.enqueued).toEqual([]);
   });
 
-  test("instância desconhecida: 200 (evita retry) mas nada enviado", async () => {
-    const provider = new FakeProvider(INCOMING);
+  test("instância desconhecida: 200 (evita retry) e fila vazia", async () => {
+    const queue = new InMemoryMessageQueue();
     const handle = createRouter({
       tenants: new FakeTenantRepository(null),
-      makeEvolutionProvider: () => provider,
-      makeCloudApiProvider: () => new FakeProvider(null),
+      queue,
       evolutionWebhookToken: "token-secreto"
     });
 
     const res = await handle(
       new Request("http://webhook.test/webhook/evolution?token=token-secreto", {
         method: "POST",
-        body: JSON.stringify({ event: "messages.upsert", instance: "instancia-desconhecida" })
+        body: JSON.stringify({ ...EVOLUTION_PAYLOAD, instance: "instancia-desconhecida" })
       })
     );
 
     expect(res.status).toBe(200);
-    expect(provider.sent).toEqual([]);
+    expect(queue.enqueued).toEqual([]);
   });
 
-  test("falha ao enviar eco (provedor indisponível): ainda responde 200, não propaga o erro", async () => {
+  test("evento que não é mensagem de texto: 200 e fila vazia", async () => {
+    const queue = new InMemoryMessageQueue();
     const handle = createRouter({
       tenants: new FakeTenantRepository(fakeTenant()),
-      makeEvolutionProvider: () => new FailingProvider(INCOMING),
-      makeCloudApiProvider: () => new FakeProvider(null),
+      queue,
       evolutionWebhookToken: "token-secreto"
     });
 
     const res = await handle(
       new Request("http://webhook.test/webhook/evolution?token=token-secreto", {
         method: "POST",
-        body: JSON.stringify({ event: "messages.upsert", instance: "5511999990001" })
+        body: JSON.stringify({ event: "connection.update", instance: "5511999990001" })
       })
     );
 
     expect(res.status).toBe(200);
+    expect(queue.enqueued).toEqual([]);
+  });
+
+  test("falha ao enfileirar (Redis fora): 500 pra forçar reentrega do provedor", async () => {
+    const handle = createRouter({
+      tenants: new FakeTenantRepository(fakeTenant()),
+      queue: new FailingQueue(),
+      evolutionWebhookToken: "token-secreto"
+    });
+
+    const res = await handle(
+      new Request("http://webhook.test/webhook/evolution?token=token-secreto", {
+        method: "POST",
+        body: JSON.stringify(EVOLUTION_PAYLOAD)
+      })
+    );
+
+    expect(res.status).toBe(500);
   });
 });
 
-describe("webhook router — Meta", () => {
+describe("webhook router — Meta (P3.2: só enfileira)", () => {
   test("GET verify: token certo devolve o challenge", async () => {
     const handle = createRouter({
       tenants: new FakeTenantRepository(null),
-      makeEvolutionProvider: () => new FakeProvider(null),
-      makeCloudApiProvider: () => new FakeProvider(null),
+      queue: new InMemoryMessageQueue(),
       metaVerifyToken: "verify-123"
     });
 
@@ -171,8 +221,7 @@ describe("webhook router — Meta", () => {
   test("GET verify: token errado devolve 403", async () => {
     const handle = createRouter({
       tenants: new FakeTenantRepository(null),
-      makeEvolutionProvider: () => new FakeProvider(null),
-      makeCloudApiProvider: () => new FakeProvider(null),
+      queue: new InMemoryMessageQueue(),
       metaVerifyToken: "verify-123"
     });
 
@@ -185,12 +234,11 @@ describe("webhook router — Meta", () => {
     expect(res.status).toBe(403);
   });
 
-  test("POST sem assinatura válida: 403 e nada enviado", async () => {
-    const provider = new FakeProvider(INCOMING);
+  test("POST sem assinatura válida: 403 e fila vazia", async () => {
+    const queue = new InMemoryMessageQueue();
     const handle = createRouter({
       tenants: new FakeTenantRepository(fakeTenant({ waPhoneNumberId: "123456789012345" })),
-      makeEvolutionProvider: () => new FakeProvider(null),
-      makeCloudApiProvider: () => provider,
+      queue,
       metaAppSecret: "app-secret-teste"
     });
 
@@ -198,89 +246,92 @@ describe("webhook router — Meta", () => {
       new Request("http://webhook.test/webhook/meta", {
         method: "POST",
         headers: { "X-Hub-Signature-256": "sha256=deadbeef" },
-        body: JSON.stringify({
-          entry: [{ changes: [{ value: { metadata: { phone_number_id: "123456789012345" } } }] }]
-        })
+        body: JSON.stringify(META_PAYLOAD)
       })
     );
 
     expect(res.status).toBe(403);
-    expect(provider.sent).toEqual([]);
+    expect(queue.enqueued).toEqual([]);
   });
 
-  test("POST com assinatura válida + tenant conhecido: eco enviado", async () => {
-    const provider = new FakeProvider(INCOMING);
+  test("POST com assinatura válida + tenant conhecido: job na fila, 200", async () => {
+    const queue = new InMemoryMessageQueue();
     const appSecret = "app-secret-teste";
-    const body = JSON.stringify({
-      entry: [{ changes: [{ value: { metadata: { phone_number_id: "123456789012345" } } }] }]
-    });
-    const key = await crypto.subtle.importKey(
-      "raw",
-      new TextEncoder().encode(appSecret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"]
-    );
-    const sigBytes = new Uint8Array(
-      await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body))
-    );
-    const hex = Array.from(sigBytes)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    const body = JSON.stringify(META_PAYLOAD);
 
     const handle = createRouter({
       tenants: new FakeTenantRepository(fakeTenant({ waPhoneNumberId: "123456789012345" })),
-      makeEvolutionProvider: () => new FakeProvider(null),
-      makeCloudApiProvider: () => provider,
+      queue,
       metaAppSecret: appSecret
     });
 
     const res = await handle(
       new Request("http://webhook.test/webhook/meta", {
         method: "POST",
-        headers: { "X-Hub-Signature-256": `sha256=${hex}` },
+        headers: { "X-Hub-Signature-256": await signMeta(body, appSecret) },
         body
       })
     );
 
     expect(res.status).toBe(200);
-    expect(provider.sent).toEqual([{ to: "5511888887777", text: "eco: Oi, quero um lanche" }]);
+    expect(await res.text()).toBe("EVENT_RECEIVED");
+    expect(queue.enqueued).toEqual([
+      {
+        tenantId: "tenant-1",
+        message: {
+          from: "5511888887777",
+          body: "Oi, quero um lanche",
+          pushName: "Cliente Teste",
+          isGroup: false,
+          messageId: "meta-msg-1"
+        }
+      }
+    ]);
   });
 
-  test("falha ao enviar eco (provedor indisponível): ainda responde 200, não propaga o erro", async () => {
+  test("status update (sem messages): 200 e fila vazia", async () => {
+    const queue = new InMemoryMessageQueue();
     const appSecret = "app-secret-teste";
     const body = JSON.stringify({
       entry: [{ changes: [{ value: { metadata: { phone_number_id: "123456789012345" } } }] }]
     });
-    const key = await crypto.subtle.importKey(
-      "raw",
-      new TextEncoder().encode(appSecret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"]
-    );
-    const sigBytes = new Uint8Array(
-      await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body))
-    );
-    const hex = Array.from(sigBytes)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
 
     const handle = createRouter({
       tenants: new FakeTenantRepository(fakeTenant({ waPhoneNumberId: "123456789012345" })),
-      makeEvolutionProvider: () => new FakeProvider(null),
-      makeCloudApiProvider: () => new FailingProvider(INCOMING),
+      queue,
       metaAppSecret: appSecret
     });
 
     const res = await handle(
       new Request("http://webhook.test/webhook/meta", {
         method: "POST",
-        headers: { "X-Hub-Signature-256": `sha256=${hex}` },
+        headers: { "X-Hub-Signature-256": await signMeta(body, appSecret) },
         body
       })
     );
 
     expect(res.status).toBe(200);
+    expect(queue.enqueued).toEqual([]);
+  });
+
+  test("falha ao enfileirar (Redis fora): 500 pra Meta reentregar", async () => {
+    const appSecret = "app-secret-teste";
+    const body = JSON.stringify(META_PAYLOAD);
+
+    const handle = createRouter({
+      tenants: new FakeTenantRepository(fakeTenant({ waPhoneNumberId: "123456789012345" })),
+      queue: new FailingQueue(),
+      metaAppSecret: appSecret
+    });
+
+    const res = await handle(
+      new Request("http://webhook.test/webhook/meta", {
+        method: "POST",
+        headers: { "X-Hub-Signature-256": await signMeta(body, appSecret) },
+        body
+      })
+    );
+
+    expect(res.status).toBe(500);
   });
 });
